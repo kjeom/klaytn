@@ -89,6 +89,12 @@ func (journal *txJournal) load(add func([]*types.Transaction) []error) error {
 				dropped++
 			}
 		}
+		//
+		// 1.8.3 (P-4) loading point of journaled txs
+		//
+		for _, tx := range txs {
+			logger.Info("(RESEND) Tx", "hash", tx.Hash(), "nonce", tx.Nonce(), "timestamp", tx.Time())
+		}
 	}
 	var (
 		failure error

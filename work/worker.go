@@ -582,6 +582,13 @@ func (self *worker) commitNewWork() {
 				"number", work.Block.Number(), "hash", work.Block.Hash(),
 				"txs", work.tcount, "elapsed", common.PrettyDuration(blockMiningTime),
 				"commitTime", common.PrettyDuration(commitTxTime), "finalizeTime", common.PrettyDuration(finalizeTime))
+
+			//
+			// 1.8.3 (P-2) block generation point
+			//
+			for _, tx := range work.Block.Transactions() {
+				logger.Info("(RESEND) Tx", "hash", tx.Hash(), "nonce", tx.Nonce(), "timestamp", tx.Time())
+			}
 		}
 	}
 

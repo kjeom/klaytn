@@ -1055,6 +1055,14 @@ func handleTxMsg(pm *ProtocolManager, p Peer, msg p2p.Msg) error {
 		validTxs = append(validTxs, tx)
 		txReceiveCounter.Inc(1)
 	}
+
+	//
+	// 1.8.3 (P-1) txs receiving point from other peer
+	//
+	for _, tx := range validTxs {
+		logger.Info("(RESEND) Tx", "hash", tx.Hash(), "nonce", tx.Nonce(), "timestamp", tx.Time())
+	}
+
 	pm.txpool.HandleTxMsg(validTxs)
 	return err
 }
@@ -1208,6 +1216,12 @@ func (pm *ProtocolManager) ReBroadcastTxs(txs types.Transactions) {
 	// Therefore, it prevents sorting transactions by each peer.
 	if !sort.IsSorted(types.TxByPriceAndTime(txs)) {
 		sort.Sort(types.TxByPriceAndTime(txs))
+	}
+	//
+	// 1.8.3 (P-3) resending point of case1(received a block data) and case2(resending cached pending txs)
+	//
+	for _, tx := range txs {
+		logger.Info("(RESEND) Tx", "hash", tx.Hash(), "nonce", tx.Nonce(), "timestamp", tx.Time())
 	}
 
 	peersWithoutTxs := make(map[Peer]types.Transactions)
