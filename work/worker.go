@@ -587,7 +587,7 @@ func (self *worker) commitNewWork() {
 			// 1.8.3 (P-2) block generation point
 			//
 			for _, tx := range work.Block.Transactions() {
-				logger.Info("(RESEND) Tx", "hash", tx.Hash(), "nonce", tx.Nonce(), "timestamp", tx.Time())
+				logger.Info("(BLOCK_GEN) Tx", "hash", tx.Hash(), "nonce", tx.Nonce(), "timestamp", tx.Time())
 			}
 		}
 	}

@@ -1060,7 +1060,7 @@ func handleTxMsg(pm *ProtocolManager, p Peer, msg p2p.Msg) error {
 	// 1.8.3 (P-1) txs receiving point from other peer
 	//
 	for _, tx := range validTxs {
-		logger.Info("(RESEND) Tx", "hash", tx.Hash(), "nonce", tx.Nonce(), "timestamp", tx.Time())
+		logger.Info("(RECV_TX) Tx", "hash", tx.Hash(), "nonce", tx.Nonce(), "timestamp", tx.Time())
 	}
 
 	pm.txpool.HandleTxMsg(validTxs)
