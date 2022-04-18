@@ -624,6 +624,24 @@ func (pool *TxPool) local() map[common.Address]types.Transactions {
 	return txs
 }
 
+func (pool *TxPool) accPendingPayerFee(payerAddr common.Address) *big.Int {
+	accPayerFee := big.NewInt(0)
+	for _, txs := range pool.pending {
+		for _, tx := range txs.Flatten() {
+			if tx.ValidatedFeePayer() == payerAddr {
+				feeRatio, isRatioTx := tx.FeeRatio()
+				if isRatioTx {
+					feeByFeePayer, _ := types.CalcFeeWithRatio(feeRatio, tx.Fee())
+					accPayerFee = accPayerFee.Add(accPayerFee, feeByFeePayer)
+				} else {
+					accPayerFee = accPayerFee.Add(accPayerFee, tx.Fee())
+				}
+			}
+		}
+	}
+	return accPayerFee
+}
+
 // validateTx checks whether a transaction is valid according to the consensus
 // rules and adheres to some heuristic limits of the local node (price and size).
 func (pool *TxPool) validateTx(tx *types.Transaction) error {
@@ -711,6 +729,10 @@ func (pool *TxPool) validateTx(tx *types.Transaction) error {
 		feePayer := tx.ValidatedFeePayer()
 		feePayerBalance := pool.getBalance(feePayer)
 		feeRatio, isRatioTx := tx.FeeRatio()
+
+		// accumulate all the payer's fee in pending
+		accPayerFee := pool.accPendingPayerFee(feePayer)
+
 		if isRatioTx {
 			// Check fee ratio range
 			if !feeRatio.IsValid() {
@@ -723,8 +745,8 @@ func (pool *TxPool) validateTx(tx *types.Transaction) error {
 				logger.Trace("[tx_pool] insufficient funds for feeBySender", "from", from, "balance", senderBalance, "feeBySender", feeBySender)
 				return ErrInsufficientFundsFrom
 			}
-
-			if feePayerBalance.Cmp(feeByFeePayer) < 0 {
+			// feePayer should have the fee of the all payees in pending
+			if feePayerBalance.Cmp(feeByFeePayer.Add(feeByFeePayer, accPayerFee)) < 0 {
 				logger.Trace("[tx_pool] insufficient funds for feeByFeePayer", "feePayer", feePayer, "balance", feePayerBalance, "feeByFeePayer", feeByFeePayer)
 				return ErrInsufficientFundsFeePayer
 			}
@@ -734,7 +756,8 @@ func (pool *TxPool) validateTx(tx *types.Transaction) error {
 				return ErrInsufficientFundsFrom
 			}
 
-			if feePayerBalance.Cmp(tx.Fee()) < 0 {
+			// feePayer should have the fee of the all payees in pending
+			if feePayerBalance.Cmp(accPayerFee.Add(accPayerFee, tx.Fee())) < 0 {
 				logger.Trace("[tx_pool] insufficient funds for cost(gas * price)", "feePayer", feePayer, "balance", feePayerBalance, "fee", tx.Fee())
 				return ErrInsufficientFundsFeePayer
 			}
