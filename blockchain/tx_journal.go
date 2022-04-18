@@ -90,11 +90,17 @@ func (journal *txJournal) load(add func([]*types.Transaction) []error) error {
 			}
 		}
 		//
-		// 1.8.3 (P-4) loading point of journaled txs
+		// 1.8.3 (P-6) loading point of journaled txs
 		//
+		logger.Info("-------- LOAD_JOURNAL logging start -------")
 		for _, tx := range txs {
-			logger.Info("(DISK_LOAD) Tx", "hash", tx.Hash(), "nonce", tx.Nonce(), "timestamp", tx.Time())
+			from, err := tx.From()
+			if err != nil {
+				logger.Info("(LOAD_JOURNAL Err calling tx.FROM()")
+			}
+			logger.Info("(LOAD_JOURNAL)", "hash", tx.Hash(), "from", from, "to", tx.To(), "nonce", tx.Nonce(), "timestamp", tx.Time())
 		}
+		logger.Info("-------- LOAD_JOURNAL logging end -------")
 	}
 	var (
 		failure error
@@ -152,8 +158,19 @@ func (journal *txJournal) rotate(all map[common.Address]types.Transactions) erro
 		return err
 	}
 	journaled := 0
+	logger.Info("-------- SAVE_JOURNAL logging start -------")
 	for _, txs := range all {
 		for _, tx := range txs {
+			//
+			// 1.8.3 (P-5) saving point for journaling txs
+			//
+			for _, tx := range txs {
+				from, err := tx.From()
+				if err != nil {
+					logger.Info("(SAVE_JOURNAL Err calling tx.FROM()")
+				}
+				logger.Info("(SAVE_JOURNAL)", "hash", tx.Hash(), "from", from, "to", tx.To(), "nonce", tx.Nonce(), "timestamp", tx.Time())
+			}
 			if err = rlp.Encode(replacement, tx); err != nil {
 				replacement.Close()
 				return err
@@ -161,6 +178,7 @@ func (journal *txJournal) rotate(all map[common.Address]types.Transactions) erro
 		}
 		journaled += len(txs)
 	}
+	logger.Info("-------- SAVE_JOURNAL logging end -------")
 	replacement.Close()
 
 	// Replace the live journal with the newly generated one

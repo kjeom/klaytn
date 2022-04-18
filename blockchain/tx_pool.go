@@ -1365,6 +1365,18 @@ func (pool *TxPool) promoteExecutables(accounts []common.Address) {
 	// Notify subsystem for new promoted transactions.
 	if len(promoted) > 0 {
 		pool.txFeed.Send(NewTxsEvent{promoted})
+		logger.Info("-------- SEND logging start -------")
+		for _, tx := range promoted {
+			//
+			// 1.8.3 (P-2) sending point to peers
+			//
+			from, err := tx.From()
+			if err != nil {
+				logger.Info("(SEND_TX) Err calling tx.FROM()")
+			}
+			logger.Info("(SEND_TX)", "hash", tx.Hash(), "from", from, "to", tx.To(), "nonce", tx.Nonce(), "timestamp", tx.Time())
+		}
+		logger.Info("-------- SEND logging end -------")
 	}
 	// If the pending limit is overflown, start equalizing allowances
 	pending := uint64(0)

@@ -1,0 +1,19 @@
+POST http://52.78.52.111:8551 HTTP/1.1 
+Content-Type: application/json
+
+{
+    "jsonrpc":"2.0",
+    "method":"klay_getTransactionByHash",
+    "params":["0xe7aa77eaf6926f4a71090695541b10b63c27b1a61cf7ed4aa0942120610c75ca"],
+    "id":1
+}
+###
+POST http://52.78.52.111:8551 HTTP/1.1 
+Content-Type: application/json
+
+{
+    "jsonrpc":"2.0",
+    "method":"klay_getBlockByNumber",
+    "params":["0x120d", true],
+    "id":1
+}

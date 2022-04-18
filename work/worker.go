@@ -584,11 +584,17 @@ func (self *worker) commitNewWork() {
 				"commitTime", common.PrettyDuration(commitTxTime), "finalizeTime", common.PrettyDuration(finalizeTime))
 
 			//
-			// 1.8.3 (P-2) block generation point
+			// 1.8.3 (P-3) block generation point
 			//
+			logger.Info("-------- BLOCK_GEN logging start -------")
 			for _, tx := range work.Block.Transactions() {
-				logger.Info("(BLOCK_GEN) Tx", "hash", tx.Hash(), "nonce", tx.Nonce(), "timestamp", tx.Time())
+				from, err := tx.From()
+				if err != nil {
+					logger.Info("BLOCK_GEN Err calling tx.FROM()")
+				}
+				logger.Info("(BLOCK_GEN)", "hash", tx.Hash(), "from", from, "to", tx.To(), "nonce", tx.Nonce(), "timestamp", tx.Time())
 			}
+			logger.Info("-------- BLOCK_GEN logging end -------")
 		}
 	}
 

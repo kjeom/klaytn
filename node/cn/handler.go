@@ -1059,9 +1059,15 @@ func handleTxMsg(pm *ProtocolManager, p Peer, msg p2p.Msg) error {
 	//
 	// 1.8.3 (P-1) txs receiving point from other peer
 	//
+	logger.Info("-------- RECV logging start -------")
 	for _, tx := range validTxs {
-		logger.Info("(RECV_TX) Tx", "hash", tx.Hash(), "nonce", tx.Nonce(), "timestamp", tx.Time())
+		from, err := tx.From()
+		if err != nil {
+			logger.Info("(RECV_TX Err calling tx.FROM()")
+		}
+		logger.Info("(RECV_TX)", "hash", tx.Hash(), "from", from, "to", tx.To(), "nonce", tx.Nonce(), "timestamp", tx.Time())
 	}
+	logger.Info("-------- RECV logging end -------")
 
 	pm.txpool.HandleTxMsg(validTxs)
 	return err
@@ -1218,11 +1224,17 @@ func (pm *ProtocolManager) ReBroadcastTxs(txs types.Transactions) {
 		sort.Sort(types.TxByPriceAndTime(txs))
 	}
 	//
-	// 1.8.3 (P-3) resending point of case1(received a block data) and case2(resending cached pending txs)
+	// 1.8.3 (P-4) resending point of case1(received a block data) and case2(resending cached pending txs)
 	//
+	logger.Info("-------- RESEND_TX logging start -------")
 	for _, tx := range txs {
-		logger.Info("(RESEND) Tx", "hash", tx.Hash(), "nonce", tx.Nonce(), "timestamp", tx.Time())
+		from, err := tx.From()
+		if err != nil {
+			logger.Info("(RESEND_TX Err calling tx.FROM()")
+		}
+		logger.Info("(RESEND_TX)", "hash", tx.Hash(), "from", from, "to", tx.To(), "nonce", tx.Nonce(), "timestamp", tx.Time())
 	}
+	logger.Info("-------- RESEND_TX logging end -------")
 
 	peersWithoutTxs := make(map[Peer]types.Transactions)
 	for _, tx := range txs {
