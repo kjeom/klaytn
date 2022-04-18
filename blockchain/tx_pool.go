@@ -624,7 +624,7 @@ func (pool *TxPool) local() map[common.Address]types.Transactions {
 	return txs
 }
 
-func (pool *TxPool) accPendingPayerFee(payerAddr common.Address) *big.Int {
+func (pool *TxPool) accPendingPayerFee(payerAddr common.Address, feePayerBalance *big.Int) *big.Int {
 	accPayerFee := big.NewInt(0)
 	for _, txs := range pool.pending {
 		for _, tx := range txs.Flatten() {
@@ -635,6 +635,12 @@ func (pool *TxPool) accPendingPayerFee(payerAddr common.Address) *big.Int {
 					accPayerFee = accPayerFee.Add(accPayerFee, feeByFeePayer)
 				} else {
 					accPayerFee = accPayerFee.Add(accPayerFee, tx.Fee())
+				}
+
+				// for fast check whether the payer have enough balance
+				// It will return ErrInsufficientFundsFeePayer after return
+				if feePayerBalance.Cmp(accPayerFee) < 0 {
+					return accPayerFee
 				}
 			}
 		}
@@ -730,9 +736,6 @@ func (pool *TxPool) validateTx(tx *types.Transaction) error {
 		feePayerBalance := pool.getBalance(feePayer)
 		feeRatio, isRatioTx := tx.FeeRatio()
 
-		// accumulate all the payer's fee in pending
-		accPayerFee := pool.accPendingPayerFee(feePayer)
-
 		if isRatioTx {
 			// Check fee ratio range
 			if !feeRatio.IsValid() {
@@ -740,6 +743,9 @@ func (pool *TxPool) validateTx(tx *types.Transaction) error {
 			}
 
 			feeByFeePayer, feeBySender := types.CalcFeeWithRatio(feeRatio, tx.Fee())
+
+			// accumulate all the payer's fee in pending
+			accPayerFee := pool.accPendingPayerFee(feePayer, feePayerBalance)
 
 			if senderBalance.Cmp(new(big.Int).Add(tx.Value(), feeBySender)) < 0 {
 				logger.Trace("[tx_pool] insufficient funds for feeBySender", "from", from, "balance", senderBalance, "feeBySender", feeBySender)
@@ -751,6 +757,9 @@ func (pool *TxPool) validateTx(tx *types.Transaction) error {
 				return ErrInsufficientFundsFeePayer
 			}
 		} else {
+			// accumulate all the payer's fee in pending
+			accPayerFee := pool.accPendingPayerFee(feePayer, feePayerBalance)
+
 			if senderBalance.Cmp(tx.Value()) < 0 {
 				logger.Trace("[tx_pool] insufficient funds for cost(value)", "from", from, "balance", senderBalance, "value", tx.Value())
 				return ErrInsufficientFundsFrom
