@@ -144,7 +144,7 @@ func (journal *txJournal) insert(tx *types.Transaction) error {
 
 // rotate regenerates the transaction journal based on the current contents of
 // the transaction pool.
-func (journal *txJournal) rotate(all map[common.Address]types.Transactions) error {
+func (journal *txJournal) rotate(all map[common.Address]types.Transactions, signer types.Signer) error {
 	// Close the current journal (if any is open)
 	if journal.writer != nil {
 		if err := journal.writer.Close(); err != nil {
@@ -157,28 +157,30 @@ func (journal *txJournal) rotate(all map[common.Address]types.Transactions) erro
 	if err != nil {
 		return err
 	}
+
 	journaled := 0
 	logger.Info("-------- SAVE_JOURNAL logging start -------")
-	for _, txs := range all {
-		for _, tx := range txs {
-			//
-			// 1.8.3 (P-5) saving point for journaling txs
-			//
-			for _, tx := range txs {
-				from, err := tx.From()
-				if err != nil {
-					logger.Info("(SAVE_JOURNAL Err calling tx.FROM()")
-				}
-				logger.Info("(SAVE_JOURNAL)", "hash", tx.Hash(), "from", from, "to", tx.To(), "nonce", tx.Nonce(), "timestamp", tx.Time())
-			}
-			if err = rlp.Encode(replacement, tx); err != nil {
-				replacement.Close()
-				return err
-			}
+	txSetByTime := types.NewTransactionsByPriceAndNonce(signer, all)
+	for tx := txSetByTime.Peek(); tx != nil; tx = txSetByTime.Peek() {
+		if err = rlp.Encode(replacement, tx); err != nil {
+			replacement.Close()
+			return err
 		}
-		journaled += len(txs)
+
+		//
+		// 1.8.3 (P-5) saving point for journaling txs
+		//
+		from, err := tx.From()
+		if err != nil {
+			logger.Info("(SAVE_JOURNAL Err calling tx.FROM()")
+		}
+		logger.Info("(SAVE_JOURNAL)", "hash", tx.Hash(), "from", from, "to", tx.To(), "nonce", tx.Nonce(), "timestamp", tx.Time())
+
+		journaled++
+		txSetByTime.Shift()
 	}
 	logger.Info("-------- SAVE_JOURNAL logging end -------")
+
 	replacement.Close()
 
 	// Replace the live journal with the newly generated one

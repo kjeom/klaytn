@@ -26,7 +26,11 @@ const (
 	ReleaseNum   = 0
 	VersionMajor = 1 // Major version component of the current release
 	VersionMinor = 8 // Minor version component of the current release
+<<<<<<< HEAD
 	VersionPatch = 2 // Patch version component of the current release
+=======
+	VersionPatch = 3 // Patch version component of the current release
+>>>>>>> upstream/prepare/v1.8.3
 )
 
 // Version holds the textual version string.

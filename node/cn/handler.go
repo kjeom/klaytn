@@ -1223,6 +1223,7 @@ func (pm *ProtocolManager) ReBroadcastTxs(txs types.Transactions) {
 	if !sort.IsSorted(types.TxByPriceAndTime(txs)) {
 		sort.Sort(types.TxByPriceAndTime(txs))
 	}
+<<<<<<< HEAD
 	//
 	// 1.8.3 (P-4) resending point of case1(received a block data) and case2(resending cached pending txs)
 	//
@@ -1235,6 +1236,8 @@ func (pm *ProtocolManager) ReBroadcastTxs(txs types.Transactions) {
 		logger.Info("(RESEND_TX)", "hash", tx.Hash(), "from", from, "to", tx.To(), "nonce", tx.Nonce(), "timestamp", tx.Time())
 	}
 	logger.Info("-------- RESEND_TX logging end -------")
+=======
+>>>>>>> upstream/prepare/v1.8.3
 
 	peersWithoutTxs := make(map[Peer]types.Transactions)
 	for _, tx := range txs {
