@@ -1060,6 +1060,7 @@ func handleTxMsg(pm *ProtocolManager, p Peer, msg p2p.Msg) error {
 	//
 	if len(validTxs) > 0 {
 		logger.Info("-------- RECV logging start -------")
+		logger.Info("PEER Info", "peer address", p.GetAddr(), "peer id", p.GetID())
 		for _, tx := range validTxs {
 			from, err := tx.From()
 			if err != nil {
