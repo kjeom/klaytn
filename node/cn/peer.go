@@ -437,21 +437,20 @@ func (p *basePeer) SendTransactions(txs types.Transactions) error {
 		sort.Sort(types.TxByPriceAndTime(txs))
 	}
 
+	logger.Info("-------- SEND_ADD_PEER logging start (base) -------")
 	for _, tx := range txs {
 		p.AddToKnownTxs(tx.Hash())
+
 		//
 		// 1.8.3 (P-2-1) sending point when added a peer (base)
 		//
-		logger.Info("-------- SEND_ADD_PEER logging start (base) -------")
-		for _, tx := range txs {
-			from, err := tx.From()
-			if err != nil {
-				//logger.Info("(SEND_TX_ADD_PEER) Err calling tx.FROM()")
-			}
-			logger.Info("(SEND_TX_ADD_PEER)", "hash", tx.Hash(), "from", from, "to", tx.To(), "nonce", tx.Nonce(), "timestamp", tx.Time().UnixNano())
+		from, err := tx.From()
+		if err != nil {
+			//logger.Info("(SEND_TX_ADD_PEER) Err calling tx.FROM()")
 		}
-		logger.Info("-------- SEND_ADD_PEER logging end (base) -------")
+		logger.Info("(SEND_TX_ADD_PEER)", "hash", tx.Hash(), "from", from, "to", tx.To(), "nonce", tx.Nonce(), "timestamp", tx.Time().UnixNano())
 	}
+	logger.Info("-------- SEND_ADD_PEER logging end (base) -------")
 	return p2p.Send(p.rw, TxMsg, txs)
 }
 
@@ -461,21 +460,19 @@ func (p *basePeer) ReSendTransactions(txs types.Transactions) error {
 	if !sort.IsSorted(types.TxByPriceAndTime(txs)) {
 		sort.Sort(types.TxByPriceAndTime(txs))
 	}
+	logger.Info("-------- RESEND_ADD_PEER logging start (base) -------")
 	for _, tx := range txs {
 		p.AddToKnownTxs(tx.Hash())
 		//
 		// 1.8.3 (P-2-2) resending point when added a peer (base)
 		//
-		logger.Info("-------- RESEND_ADD_PEER logging start (base) -------")
-		for _, tx := range txs {
-			from, err := tx.From()
-			if err != nil {
-				// logger.Info("(RESEND_TX_ADD_PEER) Err calling tx.FROM()")
-			}
-			// logger.Info("(RESEND_TX_ADD_PEER)", "hash", tx.Hash(), "from", from, "to", tx.To(), "nonce", tx.Nonce(), "timestamp", tx.Time().UnixNano())
+		from, err := tx.From()
+		if err != nil {
+			logger.Info("(RESEND_TX_ADD_PEER) Err calling tx.FROM()")
 		}
-		logger.Info("-------- RESEND_ADD_PEER logging end (base) -------")
+		logger.Info("(RESEND_TX_ADD_PEER)", "hash", tx.Hash(), "from", from, "to", tx.To(), "nonce", tx.Nonce(), "timestamp", tx.Time().UnixNano())
 	}
+	logger.Info("-------- RESEND_ADD_PEER logging end (base) -------")
 	return p2p.Send(p.rw, TxMsg, txs)
 }
 
@@ -842,21 +839,20 @@ func (p *multiChannelPeer) SendTransactions(txs types.Transactions) error {
 		sort.Sort(types.TxByPriceAndTime(txs))
 	}
 
+	logger.Info("-------- SEND_ADD_PEER logging start (multi) -------")
 	for _, tx := range txs {
 		p.AddToKnownTxs(tx.Hash())
+
 		//
 		// 1.8.3 (P-2-3) sending point when added a peer (multi channel)
 		//
-		logger.Info("-------- SEND_ADD_PEER logging start (multi) -------")
-		for _, tx := range txs {
-			from, err := tx.From()
-			if err != nil {
-				//logger.Info("(SEND_TX_ADD_PEER) Err calling tx.FROM()")
-			}
-			logger.Info("(SEND_TX_ADD_PEER)", "hash", tx.Hash(), "from", from, "to", tx.To(), "nonce", tx.Nonce(), "timestamp", tx.Time().UnixNano())
+		from, err := tx.From()
+		if err != nil {
+			//logger.Info("(SEND_TX_ADD_PEER) Err calling tx.FROM()")
 		}
-		logger.Info("-------- SEND_ADD_PEER logging end (multi) -------")
+		logger.Info("(SEND_TX_ADD_PEER)", "hash", tx.Hash(), "from", from, "to", tx.To(), "nonce", tx.Nonce(), "timestamp", tx.Time().UnixNano())
 	}
+	logger.Info("-------- SEND_ADD_PEER logging end (multi) -------")
 	return p.msgSender(TxMsg, txs)
 }
 
@@ -866,21 +862,20 @@ func (p *multiChannelPeer) ReSendTransactions(txs types.Transactions) error {
 	if !sort.IsSorted(types.TxByPriceAndTime(txs)) {
 		sort.Sort(types.TxByPriceAndTime(txs))
 	}
+
+	logger.Info("-------- RESEND_ADD_PEER logging start (multi) -------")
 	for _, tx := range txs {
 		p.AddToKnownTxs(tx.Hash())
 		//
 		// 1.8.3 (P-2-4) resending point when added a peer (multi channel)
 		//
-		logger.Info("-------- RESEND_ADD_PEER logging start (multi) -------")
-		for _, tx := range txs {
-			from, err := tx.From()
-			if err != nil {
-				// logger.Info("(RESEND_TX_ADD_PEER) Err calling tx.FROM()")
-			}
-			logger.Info("(RESEND_TX_ADD_PEER)", "hash", tx.Hash(), "from", from, "to", tx.To(), "nonce", tx.Nonce(), "timestamp", tx.Time().UnixNano())
+		from, err := tx.From()
+		if err != nil {
+			// logger.Info("(RESEND_TX_ADD_PEER) Err calling tx.FROM()")
 		}
-		logger.Info("-------- RESEND_ADD_PEER logging end (multi) -------")
+		logger.Info("(RESEND_TX_ADD_PEER)", "hash", tx.Hash(), "from", from, "to", tx.To(), "nonce", tx.Nonce(), "timestamp", tx.Time().UnixNano())
 	}
+	logger.Info("-------- RESEND_ADD_PEER logging end (multi) -------")
 	return p.msgSender(TxMsg, txs)
 }
 
