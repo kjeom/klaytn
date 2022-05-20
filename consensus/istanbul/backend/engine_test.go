@@ -1362,10 +1362,6 @@ func TestGovernance_Votes(t *testing.T) {
 				{"kip71.lowerboundbasefee", uint64(25000000000)},  // voted on block 3
 				{"kip71.lowerboundbasefee", uint64(25000000000)},  // voted on block 4
 				{"kip71.lowerboundbasefee", uint64(25000000000)},  // voted on block 5
-				{"kip71.lowerboundbasefee", uint64(25000000000)},  // voted on block 6
-				{"kip71.lowerboundbasefee", uint64(25000000000)},  // voted on block 7
-				{"kip71.lowerboundbasefee", uint64(25000000000)},  // voted on block 8
-				{"kip71.lowerboundbasefee", uint64(25000000000)},  // voted on block 9
 			},
 			expected: []governanceItem{
 				{vote{"kip71.lowerboundbasefee", uint64(750000000000)}, 6},
@@ -1379,10 +1375,6 @@ func TestGovernance_Votes(t *testing.T) {
 				{"kip71.upperboundbasefee", uint64(25000000000)},  // voted on block 3
 				{"kip71.upperboundbasefee", uint64(25000000000)},  // voted on block 4
 				{"kip71.upperboundbasefee", uint64(25000000000)},  // voted on block 5
-				{"kip71.upperboundbasefee", uint64(25000000000)},  // voted on block 6
-				{"kip71.upperboundbasefee", uint64(25000000000)},  // voted on block 7
-				{"kip71.upperboundbasefee", uint64(25000000000)},  // voted on block 8
-				{"kip71.upperboundbasefee", uint64(25000000000)},  // voted on block 9
 			},
 			expected: []governanceItem{
 				{vote{"kip71.upperboundbasefee", uint64(750000000000)}, 6},
@@ -1396,10 +1388,6 @@ func TestGovernance_Votes(t *testing.T) {
 				{"kip71.blockgaslimit", uint64(84000000)},  // voted on block 3
 				{"kip71.blockgaslimit", uint64(84000000)},  // voted on block 4
 				{"kip71.blockgaslimit", uint64(84000000)},  // voted on block 5
-				{"kip71.blockgaslimit", uint64(84000000)},  // voted on block 6
-				{"kip71.blockgaslimit", uint64(84000000)},  // voted on block 7
-				{"kip71.blockgaslimit", uint64(84000000)},  // voted on block 8
-				{"kip71.blockgaslimit", uint64(84000000)},  // voted on block 9
 			},
 			expected: []governanceItem{
 				{vote{"kip71.blockgaslimit", uint64(840000000)}, 6},
@@ -1413,10 +1401,6 @@ func TestGovernance_Votes(t *testing.T) {
 				{"kip71.gastarget", uint64(30000000)}, // voted on block 3
 				{"kip71.gastarget", uint64(30000000)}, // voted on block 4
 				{"kip71.gastarget", uint64(30000000)}, // voted on block 5
-				{"kip71.gastarget", uint64(30000000)}, // voted on block 6
-				{"kip71.gastarget", uint64(30000000)}, // voted on block 7
-				{"kip71.gastarget", uint64(30000000)}, // voted on block 8
-				{"kip71.gastarget", uint64(30000000)}, // voted on block 9
 			},
 			expected: []governanceItem{
 				{vote{"kip71.gastarget", uint64(50000000)}, 6},
@@ -1430,10 +1414,6 @@ func TestGovernance_Votes(t *testing.T) {
 				{"kip71.basefeedenominator", uint64(64)}, // voted on block 3
 				{"kip71.basefeedenominator", uint64(64)}, // voted on block 4
 				{"kip71.basefeedenominator", uint64(64)}, // voted on block 5
-				{"kip71.basefeedenominator", uint64(64)}, // voted on block 6
-				{"kip71.basefeedenominator", uint64(64)}, // voted on block 7
-				{"kip71.basefeedenominator", uint64(64)}, // voted on block 8
-				{"kip71.basefeedenominator", uint64(64)}, // voted on block 9
 			},
 			expected: []governanceItem{
 				{vote{"kip71.basefeedenominator", uint64(32)}, 6},
