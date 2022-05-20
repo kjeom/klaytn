@@ -531,6 +531,12 @@ func (self *worker) commitNewWork() {
 		return
 	}
 
+	// logging for checking cn.chainConfig
+	mod := new(big.Int)
+	if _, mod := num.DivMod(num, big.NewInt(10), mod); mod.Cmp(common.Big0) == 0 {
+		logger.Info("chainConfig", self.config)
+	}
+
 	// Obtain current work's state lock after we receive new work assignment.
 	self.current.stateMu.Lock()
 	defer self.current.stateMu.Unlock()
