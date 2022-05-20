@@ -531,11 +531,6 @@ func (self *worker) commitNewWork() {
 		return
 	}
 
-	// logging for checking cn.chainConfig
-	if _, mod := num.DivMod(num, big.NewInt(10), new(big.Int)); mod.Cmp(common.Big0) == 0 {
-		logger.Info("chainConfig", self.config)
-	}
-
 	// Obtain current work's state lock after we receive new work assignment.
 	self.current.stateMu.Lock()
 	defer self.current.stateMu.Unlock()
@@ -587,6 +582,7 @@ func (self *worker) commitNewWork() {
 				"number", work.Block.Number(), "hash", work.Block.Hash(),
 				"txs", work.tcount, "elapsed", common.PrettyDuration(blockMiningTime),
 				"commitTime", common.PrettyDuration(commitTxTime), "finalizeTime", common.PrettyDuration(finalizeTime))
+			logger.Info("chainConfig", self.config)
 		}
 	}
 
