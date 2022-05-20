@@ -532,8 +532,7 @@ func (self *worker) commitNewWork() {
 	}
 
 	// logging for checking cn.chainConfig
-	mod := new(big.Int)
-	if _, mod := num.DivMod(num, big.NewInt(10), mod); mod.Cmp(common.Big0) == 0 {
+	if _, mod := num.DivMod(num, big.NewInt(10), new(big.Int)); mod.Cmp(common.Big0) == 0 {
 		logger.Info("chainConfig", self.config)
 	}
 
