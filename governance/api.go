@@ -90,30 +90,24 @@ func (api *PublicGovernanceAPI) Vote(key string, val interface{}) (string, error
 	if GovernanceModeMap[gMode] == params.GovernanceMode_Single && gNode != api.governance.NodeAddress() {
 		return "", errPermissionDenied
 	}
+	if _, ok := api.governance.ValidateVote(&GovernanceVote{Key: key, Value: val}); !ok {
+		return "", errInvalidKeyValue
+	}
 	if strings.ToLower(key) == "governance.removevalidator" {
-		if _, ok := api.governance.ValidateVote(&GovernanceVote{Key: key, Value: val}); !ok {
-			return "", errInvalidKeyValue
-		}
 		if api.isRemovingSelf(val.(string)) {
 			return "", errRemoveSelf
 		}
 	}
-	if strings.ToLower(key) == "kip71.lowerboundbasefee" {
-		if _, ok := api.governance.ValidateVote(&GovernanceVote{Key: key, Value: val}); !ok {
-			return "", errInvalidKeyValue
-		}
-		if val.(uint64) > api.governance.UpperBoundBaseFee() {
-			return "", errInvalidLowerBound
-		}
-	}
-	if strings.ToLower(key) == "kip71.upperboundbasefee" {
-		if _, ok := api.governance.ValidateVote(&GovernanceVote{Key: key, Value: val}); !ok {
-			return "", errInvalidKeyValue
-		}
-		if val.(uint64) < api.governance.LowerBoundBaseFee() {
-			return "", errInvalidUpperBound
-		}
-	}
+	// if strings.ToLower(key) == "kip71.lowerboundbasefee" {
+	// 	if val.(uint64) > api.governance.UpperBoundBaseFee() {
+	// 		return "", errInvalidLowerBound
+	// 	}
+	// }
+	// if strings.ToLower(key) == "kip71.upperboundbasefee" {
+	// 	if val.(uint64) < api.governance.LowerBoundBaseFee() {
+	// 		return "", errInvalidUpperBound
+	// 	}
+	// }
 	if api.governance.AddVote(key, val) {
 		return "Your vote is prepared. It will be put into the block header or applied when your node generates a block as a proposer.", nil
 	}
