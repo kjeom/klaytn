@@ -582,7 +582,7 @@ func (self *worker) commitNewWork() {
 				"number", work.Block.Number(), "hash", work.Block.Hash(),
 				"txs", work.tcount, "elapsed", common.PrettyDuration(blockMiningTime),
 				"commitTime", common.PrettyDuration(commitTxTime), "finalizeTime", common.PrettyDuration(finalizeTime))
-			logger.Info("chainConfig", self.config.Governance.KIP71.LowerBoundBaseFee, self.config.Governance.KIP71.UpperBoundBaseFee)
+			logger.Info("chainConfig", "lower", self.config.Governance.KIP71.LowerBoundBaseFee, "upper", self.config.Governance.KIP71.UpperBoundBaseFee)
 		}
 	}
 
