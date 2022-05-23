@@ -99,12 +99,14 @@ func (api *PublicGovernanceAPI) Vote(key string, val interface{}) (string, error
 		}
 	}
 	if strings.ToLower(key) == "kip71.lowerboundbasefee" {
-		if val.(uint64) > api.governance.UpperBoundBaseFee() {
+		lowerboundbasefee := val.(uint64)
+		if lowerboundbasefee > api.governance.UpperBoundBaseFee() {
 			return "", errInvalidLowerBound
 		}
 	}
 	if strings.ToLower(key) == "kip71.upperboundbasefee" {
-		if val.(uint64) < api.governance.LowerBoundBaseFee() {
+		upperboundbasefee := val.(uint64)
+		if upperboundbasefee < api.governance.LowerBoundBaseFee() {
 			return "", errInvalidUpperBound
 		}
 	}
