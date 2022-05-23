@@ -98,16 +98,16 @@ func (api *PublicGovernanceAPI) Vote(key string, val interface{}) (string, error
 			return "", errRemoveSelf
 		}
 	}
-	// if strings.ToLower(key) == "kip71.lowerboundbasefee" {
-	// 	if val.(uint64) > api.governance.UpperBoundBaseFee() {
-	// 		return "", errInvalidLowerBound
-	// 	}
-	// }
-	// if strings.ToLower(key) == "kip71.upperboundbasefee" {
-	// 	if val.(uint64) < api.governance.LowerBoundBaseFee() {
-	// 		return "", errInvalidUpperBound
-	// 	}
-	// }
+	if strings.ToLower(key) == "kip71.lowerboundbasefee" {
+		if val.(uint64) > api.governance.UpperBoundBaseFee() {
+			return "", errInvalidLowerBound
+		}
+	}
+	if strings.ToLower(key) == "kip71.upperboundbasefee" {
+		if val.(uint64) < api.governance.LowerBoundBaseFee() {
+			return "", errInvalidUpperBound
+		}
+	}
 	if api.governance.AddVote(key, val) {
 		return "Your vote is prepared. It will be put into the block header or applied when your node generates a block as a proposer.", nil
 	}

@@ -140,7 +140,6 @@ func updateProposerPolicy(g *Governance, k string, v interface{}) {
 func (g *Governance) AddVote(key string, val interface{}) bool {
 	key = g.getKey(key)
 
-	logger.Info("add vote called", key, val)
 	// If the key is forbidden, stop processing it
 	if _, ok := GovernanceForbiddenKeyMap[key]; ok {
 		return false
