@@ -1384,14 +1384,14 @@ func TestGovernance_Votes(t *testing.T) {
 		{
 			votes: []vote{
 				{}, // voted on block 1
-				{"kip71.blockgaslimit", uint64(840000000)}, // voted on block 2
+				{"kip71.maxblockgasusedforbasefee", uint64(840000000)}, // voted on block 2
 				{}, // voted on block 3
 				{}, // voted on block 4
-				{"kip71.blockgaslimit", uint64(84000000)}, // voted on block 5
+				{"kip71.maxblockgasusedforbasefee", uint64(84000000)}, // voted on block 5
 			},
 			expected: []governanceItem{
-				{vote{"kip71.blockgaslimit", uint64(840000000)}, 6},
-				{vote{"kip71.blockgaslimit", uint64(84000000)}, 9},
+				{vote{"kip71.maxblockgasusedforbasefee", uint64(840000000)}, 6},
+				{vote{"kip71.maxblockgasusedforbasefee", uint64(84000000)}, 9},
 			},
 		},
 		{
@@ -1588,8 +1588,8 @@ func TestChainConfig_UpdateAfterVotes(t *testing.T) {
 			expected: vote{"kip71.upperboundbasefee", uint64(500000000000)},
 		},
 		{
-			voting:   vote{"kip71.blockgaslimit", uint64(100000000)}, // voted on block 1
-			expected: vote{"kip71.blockgaslimit", uint64(100000000)},
+			voting:   vote{"kip71.maxblockgasusedforbasefee", uint64(100000000)}, // voted on block 1
+			expected: vote{"kip71.maxblockgasusedforbasefee", uint64(100000000)},
 		},
 		{
 			voting:   vote{"kip71.gastarget", uint64(50000000)}, // voted on block 1
@@ -1612,7 +1612,7 @@ func TestChainConfig_UpdateAfterVotes(t *testing.T) {
 		assert.Equal(t, uint64(25000000000), chain.Config().Governance.KIP71.LowerBoundBaseFee)
 		assert.Equal(t, uint64(750000000000), chain.Config().Governance.KIP71.UpperBoundBaseFee)
 		assert.Equal(t, uint64(36), chain.Config().Governance.KIP71.BaseFeeDenominator)
-		assert.Equal(t, uint64(84000000), chain.Config().Governance.KIP71.BlockGasLimit)
+		assert.Equal(t, uint64(84000000), chain.Config().Governance.KIP71.MaxBlockGasUsedForBaseFee)
 		assert.Equal(t, uint64(30000000), chain.Config().Governance.KIP71.GasTarget)
 
 		// add votes and insert voted blocks
@@ -1644,8 +1644,8 @@ func TestChainConfig_UpdateAfterVotes(t *testing.T) {
 			assert.Equal(t, tc.expected.value, govConfig.KIP71.UpperBoundBaseFee)
 		case "kip71.gastarget":
 			assert.Equal(t, tc.expected.value, govConfig.KIP71.GasTarget)
-		case "kip71.blockgaslimit":
-			assert.Equal(t, tc.expected.value, govConfig.KIP71.BlockGasLimit)
+		case "kip71.maxblockgasusedforbasefee":
+			assert.Equal(t, tc.expected.value, govConfig.KIP71.MaxBlockGasUsedForBaseFee)
 		case "kip71.basefeedenominator":
 			assert.Equal(t, tc.expected.value, govConfig.KIP71.BaseFeeDenominator)
 		default:
@@ -1674,8 +1674,8 @@ func TestChainConfig_ReadFromDBAfterVotes(t *testing.T) {
 			expected: vote{"kip71.upperboundbasefee", uint64(500000000000)},
 		},
 		{
-			voting:   vote{"kip71.blockgaslimit", uint64(100000000)}, // voted on block 1
-			expected: vote{"kip71.blockgaslimit", uint64(100000000)},
+			voting:   vote{"kip71.maxblockgasusedforbasefee", uint64(100000000)}, // voted on block 1
+			expected: vote{"kip71.maxblockgasusedforbasefee", uint64(100000000)},
 		},
 		{
 			voting:   vote{"kip71.gastarget", uint64(50000000)}, // voted on block 1
@@ -1699,7 +1699,7 @@ func TestChainConfig_ReadFromDBAfterVotes(t *testing.T) {
 		assert.Equal(t, uint64(25000000000), chain.Config().Governance.KIP71.LowerBoundBaseFee)
 		assert.Equal(t, uint64(750000000000), chain.Config().Governance.KIP71.UpperBoundBaseFee)
 		assert.Equal(t, uint64(36), chain.Config().Governance.KIP71.BaseFeeDenominator)
-		assert.Equal(t, uint64(84000000), chain.Config().Governance.KIP71.BlockGasLimit)
+		assert.Equal(t, uint64(84000000), chain.Config().Governance.KIP71.MaxBlockGasUsedForBaseFee)
 		assert.Equal(t, uint64(30000000), chain.Config().Governance.KIP71.GasTarget)
 
 		// add votes and insert voted blocks
@@ -1731,8 +1731,8 @@ func TestChainConfig_ReadFromDBAfterVotes(t *testing.T) {
 			assert.Equal(t, tc.expected.value, gov.ChainConfig.Governance.KIP71.UpperBoundBaseFee)
 		case "kip71.gastarget":
 			assert.Equal(t, tc.expected.value, gov.ChainConfig.Governance.KIP71.GasTarget)
-		case "kip71.blockgaslimit":
-			assert.Equal(t, tc.expected.value, gov.ChainConfig.Governance.KIP71.BlockGasLimit)
+		case "kip71.maxblockgasusedforbasefee":
+			assert.Equal(t, tc.expected.value, gov.ChainConfig.Governance.KIP71.MaxBlockGasUsedForBaseFee)
 		case "kip71.basefeedenominator":
 			assert.Equal(t, tc.expected.value, gov.ChainConfig.Governance.KIP71.BaseFeeDenominator)
 		default:
