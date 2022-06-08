@@ -584,7 +584,7 @@ func (self *worker) commitNewWork() {
 			blockMiningExecuteTxTimer.Update(commitTxTime - trieAccess)
 			blockMiningFinalizeTimer.Update(finalizeTime)
 			logger.Info("Commit new mining work",
-				"number", work.Block.Number(), "hash", work.Block.Hash(),
+				"number", work.Block.Number(), "hash", work.Block.Hash(), "basefee", work.Block.Header().BaseFee,
 				"txs", work.tcount, "elapsed", common.PrettyDuration(blockMiningTime),
 				"commitTime", common.PrettyDuration(commitTxTime), "finalizeTime", common.PrettyDuration(finalizeTime))
 		}
