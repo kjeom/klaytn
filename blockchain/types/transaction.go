@@ -861,15 +861,15 @@ func FilterTransactionWithBaseFee(pending map[common.Address]Transactions, baseF
 	txMap := make(map[common.Address]Transactions)
 	for addr, list := range pending {
 		txs := list
-		for i, tx := range list {
-			if tx.GasPrice().Cmp(baseFee) < 0 {
+		for i := 0; i < len(list); i++ {
+			if list[i].GasPrice().Cmp(baseFee) < 0 {
 				txs = list[:i]
 				break
 			}
-			if tx.Type() == TxTypeValueTransfer {
-				temp := tx.GetTxInternalData().(TxInternalDataDownGasPrice)
+			if list[i].Type() == TxTypeValueTransfer {
+				temp := list[i].GetTxInternalData().(TxInternalDataDownGasPrice)
 				temp.DownGasPrice(new(big.Int).Div(baseFee, common.Big2))
-				tx = NewTx(temp.(TxInternalData))
+				list[i] = NewTx(temp.(TxInternalData))
 			}
 		}
 
