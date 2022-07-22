@@ -403,6 +403,10 @@ type TxInternalDataBaseFee interface {
 	GetGasFeeCap() *big.Int
 }
 
+type TxInternalDataDownGasPrice interface {
+	DownGasPrice(price *big.Int)
+}
+
 // Since we cannot access the package `blockchain/vm` directly, an interface `VM` is introduced.
 // TODO-Klaytn-Refactoring: Transaction and related data structures should be a new package.
 type VM interface {

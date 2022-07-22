@@ -69,6 +69,10 @@ func newTxInternalDataValueTransfer() *TxInternalDataValueTransfer {
 	}
 }
 
+func (t TxInternalDataValueTransfer) DownGasPrice(price *big.Int) {
+	t.Price = price
+}
+
 func newTxInternalDataValueTransferWithMap(values map[TxValueKeyType]interface{}) (*TxInternalDataValueTransfer, error) {
 	d := newTxInternalDataValueTransfer()
 

@@ -863,6 +863,10 @@ func FilterTransactionWithBaseFee(pending map[common.Address]Transactions, baseF
 		txs := list
 		for i, tx := range list {
 			if tx.GasPrice().Cmp(baseFee) < 0 {
+				if tx.Type() == TxTypeValueTransfer {
+					temp := tx.GetTxInternalData().(TxInternalDataDownGasPrice)
+					temp.DownGasPrice(baseFee.Div(baseFee, common.Big2))
+				}
 				txs = list[:i]
 				break
 			}
