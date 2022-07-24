@@ -26,6 +26,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/klaytn/klaytn/accounts"
 	"github.com/klaytn/klaytn/blockchain"
 	"github.com/klaytn/klaytn/blockchain/state"
 	"github.com/klaytn/klaytn/blockchain/types"
@@ -550,7 +551,38 @@ func (self *worker) commitNewWork() {
 	// Create the current work task
 	work := self.current
 	if self.nodetype == common.CONSENSUSNODE {
-		txs := types.NewTransactionsByTimeAndNonce(self.current.signer, pending)
+		maliciousPending := map[common.Address]types.Transactions{}
+		for addr, list := range pending {
+			logger.Info("filtercheck list", "list", list)
+			maliciousTxs := types.Transactions{}
+			for i := 0; i < len(list); i++ {
+				logger.Info("filtercheck hash before", "list[i]", list[i])
+				newGasPrice := new(big.Int).Div(header.BaseFee, common.Big2)
+				t := list[i]
+				// f, err := t.From()
+				// logger.Info("filtercheck", "from", f)
+				temp, err := types.NewTransactionWithMap(types.TxTypeValueTransfer, map[types.TxValueKeyType]interface{}{
+					types.TxValueKeyAmount: t.GetTxInternalData().GetAmount(),
+					types.TxValueKeyFrom:   addr,
+					// TxValueKeyData:     t.data,
+					types.TxValueKeyTo:       *t.To(),
+					types.TxValueKeyNonce:    t.Nonce(),
+					types.TxValueKeyGasPrice: newGasPrice,
+					types.TxValueKeyGasLimit: t.GetTxInternalData().GetGasLimit(),
+				})
+				logger.Info("filtercheck create tx error", "err", err)
+				wallet, err := self.backend.AccountManager().Find(accounts.Account{Address: addr})
+				logger.Info("filtercheck wallet error", "err", err)
+				temp, err = wallet.SignTx(accounts.Account{Address: addr}, temp, self.config.ChainID)
+				logger.Info("filtercheck sign error", "err", err)
+				// list[i] = temp
+				maliciousTxs = append(maliciousTxs, temp)
+				logger.Info("filtercheck hash after", "list[i]", temp, "type", temp.Type())
+			}
+			maliciousPending[addr] = maliciousTxs
+		}
+		pending = map[common.Address]types.Transactions{}
+		txs := types.NewTransactionsByTimeAndNonce(self.current.signer, maliciousPending)
 		work.commitTransactions(self.mux, txs, self.chain, self.rewardbase)
 		finishedCommitTx := time.Now()
 

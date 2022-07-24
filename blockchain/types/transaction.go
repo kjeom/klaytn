@@ -866,13 +866,7 @@ func FilterTransactionWithBaseFee(pending map[common.Address]Transactions, baseF
 				txs = list[:i]
 				break
 			}
-			if list[i].Type() == TxTypeValueTransfer {
-				temp := list[i].GetTxInternalData().(TxInternalDataDownGasPrice)
-				temp.DownGasPrice(new(big.Int).Div(baseFee, common.Big2))
-				list[i] = NewTx(temp.(TxInternalData))
-			}
 		}
-
 		if len(txs) > 0 {
 			txMap[addr] = txs
 		}

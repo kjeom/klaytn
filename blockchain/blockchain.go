@@ -1886,6 +1886,7 @@ func (bc *BlockChain) insertChain(chain types.Blocks) (int, []interface{}, []*ty
 			err = bc.engine.VerifyHeader(bc, block.Header(), true)
 		}
 
+		logger.Info("filtercheck", "insertchain.err", err)
 		if err == nil {
 			err = bc.validator.ValidateBody(block)
 		}
