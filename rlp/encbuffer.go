@@ -115,6 +115,14 @@ func (buf *encBuffer) writeBool(b bool) {
 	}
 }
 
+func (buf *encBuffer) writeUint8(i uint8) {
+	if i == 0 {
+		buf.str = append(buf.str, 0x80)
+	} else {
+		buf.str = append(buf.str, byte(i))
+	}
+}
+
 func (buf *encBuffer) writeUint64(i uint64) {
 	if i == 0 {
 		buf.str = append(buf.str, 0x80)
@@ -363,6 +371,10 @@ func (w EncoderBuffer) Write(b []byte) (int, error) {
 // WriteBool writes b as the integer 0 (false) or 1 (true).
 func (w EncoderBuffer) WriteBool(b bool) {
 	w.buf.writeBool(b)
+}
+
+func (w EncoderBuffer) WriteUint8(i uint8) {
+	w.buf.writeUint8(i)
 }
 
 // WriteUint64 encodes an unsigned integer.
