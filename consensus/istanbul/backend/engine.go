@@ -179,8 +179,8 @@ func (sb *backend) VerifyHeader(chain consensus.ChainReader, header *types.Heade
 	} else {
 		parent = append(parent, chain.GetHeader(header.ParentHash, header.Number.Uint64()-1))
 	}
-	logger.Info("VerifyHeader get parent check", "parent", parent, "parentHash", header.ParentHash, "block number", header.Number)
-	logger.Info("Check latest block number from DB", "latest block", chain.CurrentHeader().Number)
+	// logger.Info("VerifyHeader get parent check", "parent", parent, "parentHash", header.ParentHash, "block number", header.Number)
+	// logger.Info("Check latest block number from DB", "latest block", chain.CurrentHeader().Number)
 	return sb.verifyHeader(chain, header, parent)
 }
 
