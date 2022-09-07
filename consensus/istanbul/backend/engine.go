@@ -26,6 +26,8 @@ import (
 	"encoding/json"
 	"errors"
 	"math/big"
+	"runtime"
+	"strconv"
 	"time"
 
 	lru "github.com/hashicorp/golang-lru"
@@ -182,9 +184,18 @@ func (sb *backend) VerifyHeader(chain consensus.ChainReader, header *types.Heade
 	if parent == nil {
 		logger.Info("VerifyHeader parent nil check", "parent", parent)
 	}
-	logger.Info("VerifyHeader get parent check", "parentHash", header.ParentHash, "block number", header.Number)
+	logger.Info("VerifyHeader get parent check", "parentHash", header.ParentHash, "block number", header.Number, "gid", getGID())
 	logger.Info("Check latest block number from DB", "latest block", chain.CurrentHeader().Number)
 	return sb.verifyHeader(chain, header, parent)
+}
+
+func getGID() uint64 {
+	b := make([]byte, 64)
+	b = b[:runtime.Stack(b, false)]
+	b = bytes.TrimPrefix(b, []byte("goroutine "))
+	b = b[:bytes.IndexByte(b, ' ')]
+	n, _ := strconv.ParseUint(string(b), 10, 64)
+	return n
 }
 
 // verifyHeader checks whether a header conforms to the consensus rules.The
