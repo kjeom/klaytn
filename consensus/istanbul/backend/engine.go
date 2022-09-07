@@ -181,8 +181,8 @@ func (sb *backend) VerifyHeader(chain consensus.ChainReader, header *types.Heade
 	} else {
 		parent = append(parent, chain.GetHeader(header.ParentHash, header.Number.Uint64()-1))
 	}
-	if parent == nil {
-		logger.Info("VerifyHeader parent nil check", "parent", parent)
+	if parent[0] == nil {
+		logger.Info("VerifyHeader parent nil check", "parent", parent[0])
 	}
 	logger.Info("VerifyHeader get parent check", "parentHash", header.ParentHash, "block number", header.Number, "gid", getGID())
 	logger.Info("Check latest block number from DB", "latest block", chain.CurrentHeader().Number)

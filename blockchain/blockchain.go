@@ -1813,8 +1813,8 @@ func (bc *BlockChain) insertChain(chain types.Blocks) (int, []interface{}, []*ty
 	// Start a parallel signature recovery (signer will fluke on fork transition, minimal perf loss)
 	senderCacher.recoverFromBlocks(types.MakeSigner(bc.chainConfig, chain[0].Number()), chain)
 
-	for _, block := range chain {
-		logger.Info("Insertchain checkpoint chain range", block.Number())
+	for i, block := range chain {
+		logger.Info("Insertchain checkpoint chain range", "index", i, "block", block.Number(), "chain length", len(chain))
 	}
 	// Iterate over the blocks and insert when the verifier permits
 	for i, block := range chain {
