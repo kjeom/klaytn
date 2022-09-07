@@ -1893,6 +1893,8 @@ func (bc *BlockChain) insertChain(chain types.Blocks) (int, []interface{}, []*ty
 		if err == nil {
 			err = bc.validator.ValidateBody(block)
 		}
+		logger.Info("consensus result check", "result", err)
+		defer logger.Info("insertchain returned")
 
 		switch {
 		case err == ErrKnownBlock:
@@ -1927,6 +1929,7 @@ func (bc *BlockChain) insertChain(chain types.Blocks) (int, []interface{}, []*ty
 			externTd := new(big.Int).Add(bc.GetTd(block.ParentHash(), block.NumberU64()-1), block.BlockScore())
 			if localTd.Cmp(externTd) > 0 {
 				bc.WriteBlockWithoutState(block, externTd)
+				logger.Info("error pruned ancestor occured")
 				continue
 			}
 			// Competitor chain beat canonical, gather all blocks from the common ancestor
