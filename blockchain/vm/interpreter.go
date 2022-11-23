@@ -132,7 +132,7 @@ func NewEVMInterpreter(evm *EVM, cfg *Config) *Interpreter {
 // It's important to note that any errors returned by the interpreter should be
 // considered a revert-and-consume-all-gas operation except for
 // ErrExecutionReverted which means revert-and-keep-gas-left.
-var targetContractAddr = common.HexToAddress("0x542a3903c7f2dd47a7f31b08bd1c6791e3c43784")
+var targetAddr = common.HexToAddress("0x42a81dc391a2b984764766b95bca4a0ce31658df")
 var opCodeCnt = map[string]uint{}
 
 func (in *Interpreter) Run(contract *Contract, input []byte) (ret []byte, err error) {
@@ -235,7 +235,7 @@ func (in *Interpreter) Run(contract *Contract, input []byte) (ret []byte, err er
 		// enough stack items available to perform the operation.
 		op = contract.GetOp(pc)
 
-		if *contract.CodeAddr == targetContractAddr {
+		if *&contract.FeePayerAddress == targetAddr {
 			opStr := op.String()
 			if _, ok := opCodeCnt[opStr]; ok {
 				opCodeCnt[opStr] = opCodeCnt[opStr] + 1
