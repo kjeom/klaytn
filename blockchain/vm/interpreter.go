@@ -234,15 +234,15 @@ func (in *Interpreter) Run(contract *Contract, input []byte) (ret []byte, err er
 		// Get the operation from the jump table and validate the stack to ensure there are
 		// enough stack items available to perform the operation.
 		op = contract.GetOp(pc)
-		opStr := op.String()
-		if _, ok := opCodeCnt[opStr]; ok {
-			opCodeCnt[opStr] = opCodeCnt[opStr] + 1
-		} else {
-			opCodeCnt[opStr] = 1
-		}
-		m, _ := json.Marshal(opCodeCnt)
 
 		if *contract.CodeAddr == targetContractAddr {
+			opStr := op.String()
+			if _, ok := opCodeCnt[opStr]; ok {
+				opCodeCnt[opStr] = opCodeCnt[opStr] + 1
+			} else {
+				opCodeCnt[opStr] = 1
+			}
+			m, _ := json.Marshal(opCodeCnt)
 			logger.Info("opcode count: ", "opCodeCnt", string(m))
 		}
 		operation := in.cfg.JumpTable[op]
