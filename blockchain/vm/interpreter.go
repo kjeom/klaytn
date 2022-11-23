@@ -238,8 +238,8 @@ func (in *Interpreter) Run(contract *Contract, input []byte) (ret []byte, err er
 		} else {
 			opCodeCnt[opStr] = 1
 		}
-		toStr, _ := json.Marshal(opCodeCnt)
-		logger.Info("opcode count: ", "opCodeCnt", toStr)
+		m, _ := json.Marshal(opCodeCnt)
+		logger.Info("opcode count: ", "opCodeCnt", string(m))
 		operation := in.cfg.JumpTable[op]
 		if operation == nil {
 			return nil, fmt.Errorf("invalid opcode 0x%x", int(op)) // TODO-Klaytn-Issue615
