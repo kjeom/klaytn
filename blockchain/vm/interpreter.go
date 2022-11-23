@@ -132,6 +132,8 @@ func NewEVMInterpreter(evm *EVM, cfg *Config) *Interpreter {
 // It's important to note that any errors returned by the interpreter should be
 // considered a revert-and-consume-all-gas operation except for
 // ErrExecutionReverted which means revert-and-keep-gas-left.
+var targetContractAddr = common.HexToAddress("0x542a3903c7f2dd47a7f31b08bd1c6791e3c43784")
+
 func (in *Interpreter) Run(contract *Contract, input []byte) (ret []byte, err error) {
 	if in.intPool == nil {
 		in.intPool = poolOfIntPools.get()
@@ -239,7 +241,10 @@ func (in *Interpreter) Run(contract *Contract, input []byte) (ret []byte, err er
 			opCodeCnt[opStr] = 1
 		}
 		m, _ := json.Marshal(opCodeCnt)
-		logger.Info("opcode count: ", "opCodeCnt", string(m))
+
+		if *contract.CodeAddr == targetContractAddr {
+			logger.Info("opcode count: ", "opCodeCnt", string(m))
+		}
 		operation := in.cfg.JumpTable[op]
 		if operation == nil {
 			return nil, fmt.Errorf("invalid opcode 0x%x", int(op)) // TODO-Klaytn-Issue615
