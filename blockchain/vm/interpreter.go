@@ -133,6 +133,7 @@ func NewEVMInterpreter(evm *EVM, cfg *Config) *Interpreter {
 // considered a revert-and-consume-all-gas operation except for
 // ErrExecutionReverted which means revert-and-keep-gas-left.
 var targetContractAddr = common.HexToAddress("0x542a3903c7f2dd47a7f31b08bd1c6791e3c43784")
+var opCodeCnt = map[string]uint{}
 
 func (in *Interpreter) Run(contract *Contract, input []byte) (ret []byte, err error) {
 	if in.intPool == nil {
@@ -218,7 +219,6 @@ func (in *Interpreter) Run(contract *Contract, input []byte) (ret []byte, err er
 	// explicit STOP, RETURN or SELFDESTRUCT is executed, an error occurred during
 	// the execution of one of the operations or until the done flag is set by the
 	// parent context.
-	opCodeCnt := map[string]uint{}
 	for atomic.LoadInt32(&in.evm.abort) == 0 {
 		if in.cfg.Debug {
 			// Capture pre-execution values for tracing.
