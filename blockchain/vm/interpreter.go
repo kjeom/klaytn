@@ -234,6 +234,7 @@ func (in *Interpreter) Run(contract *Contract, input []byte) (ret []byte, err er
 		// Get the operation from the jump table and validate the stack to ensure there are
 		// enough stack items available to perform the operation.
 		op = contract.GetOp(pc)
+		operation := in.cfg.JumpTable[op]
 
 		if contract.FeePayerAddress == targetAddr {
 			opStr := op.String()
@@ -242,10 +243,11 @@ func (in *Interpreter) Run(contract *Contract, input []byte) (ret []byte, err er
 			} else {
 				opCodeCnt[opStr] = 1
 			}
-			m, _ := json.Marshal(opCodeCnt)
-			logger.Info("opcode count: ", "input data", common.ToHex(contract.Input), "opCodeCnt", string(m))
+			if operation.jumps {
+				m, _ := json.Marshal(opCodeCnt)
+				logger.Info("opcode count: ", "input data", common.ToHex(contract.Input), "opCodeCnt", string(m))
+			}
 		}
-		operation := in.cfg.JumpTable[op]
 		if operation == nil {
 			return nil, fmt.Errorf("invalid opcode 0x%x", int(op)) // TODO-Klaytn-Issue615
 		}
