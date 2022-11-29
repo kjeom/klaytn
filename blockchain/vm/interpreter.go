@@ -243,7 +243,7 @@ func (in *Interpreter) Run(contract *Contract, input []byte) (ret []byte, err er
 				opCodeCnt[opStr] = 1
 			}
 			m, _ := json.Marshal(opCodeCnt)
-			logger.Info("opcode count: ", "input data", contract.Input, "opCodeCnt", string(m))
+			logger.Info("opcode count: ", "input data", common.ToHex(contract.Input), "opCodeCnt", string(m))
 		}
 		operation := in.cfg.JumpTable[op]
 		if operation == nil {
