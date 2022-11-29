@@ -133,7 +133,6 @@ func NewEVMInterpreter(evm *EVM, cfg *Config) *Interpreter {
 // considered a revert-and-consume-all-gas operation except for
 // ErrExecutionReverted which means revert-and-keep-gas-left.
 var targetAddr = common.HexToAddress("0x42a81dc391a2b984764766b95bca4a0ce31658df")
-var opCodeCnt = map[string]uint{}
 
 func (in *Interpreter) Run(contract *Contract, input []byte) (ret []byte, err error) {
 	if in.intPool == nil {
@@ -215,6 +214,7 @@ func (in *Interpreter) Run(contract *Contract, input []byte) (ret []byte, err er
 		}()
 	}
 
+	var opCodeCnt = map[string]uint{}
 	// The Interpreter main run loop (contextual). This loop runs until either an
 	// explicit STOP, RETURN or SELFDESTRUCT is executed, an error occurred during
 	// the execution of one of the operations or until the done flag is set by the
@@ -235,7 +235,7 @@ func (in *Interpreter) Run(contract *Contract, input []byte) (ret []byte, err er
 		// enough stack items available to perform the operation.
 		op = contract.GetOp(pc)
 
-		if *&contract.FeePayerAddress == targetAddr {
+		if contract.FeePayerAddress == targetAddr {
 			opStr := op.String()
 			if _, ok := opCodeCnt[opStr]; ok {
 				opCodeCnt[opStr] = opCodeCnt[opStr] + 1
@@ -243,7 +243,7 @@ func (in *Interpreter) Run(contract *Contract, input []byte) (ret []byte, err er
 				opCodeCnt[opStr] = 1
 			}
 			m, _ := json.Marshal(opCodeCnt)
-			logger.Info("opcode count: ", "opCodeCnt", string(m))
+			logger.Info("opcode count: ", "input data", contract.Input, "opCodeCnt", string(m))
 		}
 		operation := in.cfg.JumpTable[op]
 		if operation == nil {
