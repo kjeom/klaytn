@@ -287,6 +287,14 @@ func (cw *contractWrapper) pushObject(vm *duktape.Context) {
 	vm.PutPropString(obj, "getInput")
 }
 
+// Context contains some contextual infos for a transaction execution that is not
+// available from within the EVM object.
+type Context struct {
+	BlockHash common.Hash // Hash of the block the tx is contained within (zero if dangling tx or call)
+	TxIndex   int         // Index of the transaction within a block (zero if dangling tx or call)
+	TxHash    common.Hash // Hash of the transaction being traced (zero if dangling call)
+}
+
 // Tracer provides an implementation of Tracer that evaluates a Javascript
 // function for each VM execution step.
 type Tracer struct {
@@ -322,7 +330,7 @@ type Tracer struct {
 // returning an object with 'step', 'fault' and 'result' functions.
 // However, if unsafeTrace is false, code should specify predefined tracer name,
 // otherwise error is returned.
-func New(code string, unsafeTrace bool) (*Tracer, error) {
+func New(code string, txCtx *Context, unsafeTrace bool) (*Tracer, error) {
 	// Resolve any tracers by name and assemble the tracer object
 	foundTracer, ok := tracer(code)
 	if ok {
@@ -344,6 +352,15 @@ func New(code string, unsafeTrace bool) (*Tracer, error) {
 		depthValue:      new(uint),
 		refundValue:     new(uint),
 	}
+
+	if txCtx != nil && txCtx.BlockHash != (common.Hash{}) {
+		tracer.ctx["blockHash"] = txCtx.BlockHash.Bytes()
+		if txCtx.TxHash != (common.Hash{}) {
+			tracer.ctx["txIndex"] = txCtx.TxIndex
+			tracer.ctx["txHash"] = txCtx.TxHash.Bytes()
+		}
+	}
+
 	// Set up builtins for this environment
 	tracer.vm.PushGlobalGoFunction("toHex", func(ctx *duktape.Context) int {
 		ctx.PushString(hexutil.Encode(popSlice(ctx)))
@@ -563,7 +580,6 @@ func (jst *Tracer) CaptureStart(from common.Address, to common.Address, create b
 	jst.ctx["input"] = input
 	jst.ctx["gas"] = gas
 	jst.ctx["value"] = value
-
 	return nil
 }
 
