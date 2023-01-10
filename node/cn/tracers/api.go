@@ -180,7 +180,7 @@ type StdTraceConfig struct {
 
 // txTraceResult is the result of a single transaction trace.
 type txTraceResult struct {
-	TxHash common.Hash `json:"txHash,omitempty"` // transaction hash
+	// TxHash common.Hash `json:"txHash,omitempty"` // transaction hash
 	Result interface{} `json:"result,omitempty"` // Trace results produced by the tracer
 	Error  string      `json:"error,omitempty"`  // Trace failure produced by the tracer
 }
@@ -289,20 +289,27 @@ func (api *API) traceChain(start, end *types.Block, config *TraceConfig, notifie
 					msg, err := tx.AsMessageWithAccountKeyPicker(signer, task.statedb, task.block.NumberU64())
 					if err != nil {
 						logger.Warn("Tracing failed", "hash", tx.Hash(), "block", task.block.NumberU64(), "err", err)
-						task.results[i] = &txTraceResult{TxHash: tx.Hash(), Error: err.Error()}
+						// task.results[i] = &txTraceResult{TxHash: tx.Hash(), Error: err.Error()}
+						task.results[i] = &txTraceResult{Error: err.Error()}
 						break
 					}
-
+					txctx := &Context{
+						BlockHash: task.block.Hash(),
+						TxIndex:   i,
+						TxHash:    tx.Hash(),
+					}
 					vmctx := blockchain.NewEVMContext(msg, task.block.Header(), newChainContext(localctx, api.backend), nil)
 
-					res, err := api.traceTx(localctx, msg, vmctx, task.statedb, config)
+					res, err := api.traceTx(localctx, msg, txctx, vmctx, task.statedb, config)
 					if err != nil {
-						task.results[i] = &txTraceResult{TxHash: tx.Hash(), Error: err.Error()}
+						// task.results[i] = &txTraceResult{TxHash: tx.Hash(), Error: err.Error()}
+						task.results[i] = &txTraceResult{Error: err.Error()}
 						logger.Warn("Tracing failed", "hash", tx.Hash(), "block", task.block.NumberU64(), "err", err)
 						break
 					}
 					task.statedb.Finalise(true, true)
-					task.results[i] = &txTraceResult{TxHash: tx.Hash(), Result: res}
+					// task.results[i] = &txTraceResult{TxHash: tx.Hash(), Result: res}
+					task.results[i] = &txTraceResult{Result: res}
 				}
 				if notifier != nil {
 					// Stream the result back to the user or abort on teardown
@@ -603,17 +610,24 @@ func (api *API) traceBlock(ctx context.Context, block *types.Block, config *Trac
 				msg, err := txs[task.index].AsMessageWithAccountKeyPicker(signer, task.statedb, block.NumberU64())
 				if err != nil {
 					logger.Warn("Tracing failed", "tx idx", task.index, "block", block.NumberU64(), "err", err)
-					results[task.index] = &txTraceResult{TxHash: txs[task.index].Hash(), Error: err.Error()}
+					// results[task.index] = &txTraceResult{TxHash: txs[task.index].Hash(), Error: err.Error()}
+					results[task.index] = &txTraceResult{Error: err.Error()}
 					continue
 				}
-
+				txctx := &Context{
+					BlockHash: block.Hash(),
+					TxIndex:   task.index,
+					TxHash:    txs[task.index].Hash(),
+				}
 				vmctx := blockchain.NewEVMContext(msg, block.Header(), newChainContext(ctx, api.backend), nil)
-				res, err := api.traceTx(ctx, msg, vmctx, task.statedb, config)
+				res, err := api.traceTx(ctx, msg, txctx, vmctx, task.statedb, config)
 				if err != nil {
-					results[task.index] = &txTraceResult{TxHash: txs[task.index].Hash(), Error: err.Error()}
+					// results[task.index] = &txTraceResult{TxHash: txs[task.index].Hash(), Error: err.Error()}
+					results[task.index] = &txTraceResult{Error: err.Error()}
 					continue
 				}
-				results[task.index] = &txTraceResult{TxHash: txs[task.index].Hash(), Result: res}
+				// results[task.index] = &txTraceResult{TxHash: txs[task.index].Hash(), Result: res}
+				results[task.index] = &txTraceResult{Result: res}
 			}
 		}()
 	}
@@ -784,14 +798,19 @@ func (api *API) TraceTransaction(ctx context.Context, hash common.Hash, config *
 	if err != nil {
 		return nil, err
 	}
+	txctx := &Context{
+		BlockHash: blockHash,
+		TxIndex:   int(index),
+		TxHash:    hash,
+	}
 	// Trace the transaction and return
-	return api.traceTx(ctx, msg, vmctx, statedb, config)
+	return api.traceTx(ctx, msg, txctx, vmctx, statedb, config)
 }
 
 // traceTx configures a new tracer according to the provided configuration, and
 // executes the given message in the provided environment. The return value will
 // be tracer dependent.
-func (api *API) traceTx(ctx context.Context, message blockchain.Message, vmctx vm.Context, statedb *state.StateDB, config *TraceConfig) (interface{}, error) {
+func (api *API) traceTx(ctx context.Context, message blockchain.Message, txCtx *Context, vmctx vm.Context, statedb *state.StateDB, config *TraceConfig) (interface{}, error) {
 	// Assemble the structured logger or the JavaScript tracer
 	var (
 		tracer vm.Tracer
@@ -811,7 +830,7 @@ func (api *API) traceTx(ctx context.Context, message blockchain.Message, vmctx v
 			tracer = vm.NewInternalTxTracer()
 		} else {
 			// Construct the JavaScript tracer to execute with
-			if tracer, err = New(*config.Tracer, api.unsafeTrace); err != nil {
+			if tracer, err = New(*config.Tracer, txCtx, api.unsafeTrace); err != nil {
 				return nil, err
 			}
 		}
