@@ -35,8 +35,10 @@ import (
 	"sync/atomic"
 	"time"
 
-	fastws "github.com/clevergo/websocket"
+	// fastws "github.com/clevergo/websocket"
 	mapset "github.com/deckarep/golang-set"
+
+	fastws "github.com/fasthttp/websocket"
 	"github.com/gorilla/websocket"
 	"github.com/klaytn/klaytn/common"
 	"github.com/valyala/fasthttp"
@@ -90,7 +92,12 @@ func (srv *Server) WebsocketHandler(allowedOrigins []string) http.Handler {
 	})
 }
 
-var upgrader = fastws.Upgrader{
+// var upgrader = fastws.Upgrader{
+// 	ReadBufferSize:  1024,
+// 	WriteBufferSize: 1024,
+// }
+
+var upgrader = fastws.FastHTTPUpgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
 }

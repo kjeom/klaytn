@@ -16,19 +16,20 @@ require (
 	github.com/dgraph-io/badger v1.6.0
 	github.com/docker/docker v1.13.1
 	github.com/edsrzf/mmap-go v1.0.0
+	github.com/fasthttp/websocket v1.5.1-rc.9 // indirect
 	github.com/fatih/color v1.9.0
 	github.com/fjl/memsize v0.0.0-20190710130421-bcb5799ab5e5
 	github.com/go-kit/kit v0.9.0 // indirect
 	github.com/go-redis/redis/v7 v7.4.0
 	github.com/go-sql-driver/mysql v1.6.0
 	github.com/go-stack/stack v1.8.0
-	github.com/golang/mock v1.4.4
+	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.2
 	github.com/golang/snappy v0.0.4
 	github.com/gorilla/websocket v1.5.0
 	github.com/hashicorp/golang-lru v0.5.5-0.20210104140557-80c98217689d
 	github.com/holiman/uint256 v1.2.0
-	github.com/huin/goupnp v1.0.3-0.20220313090229-ca81a64b4204
+	github.com/huin/goupnp v1.0.3
 	github.com/influxdata/influxdb v1.8.3
 	github.com/jackpal/go-nat-pmp v1.0.2
 	github.com/jinzhu/gorm v1.9.15
@@ -57,13 +58,13 @@ require (
 	github.com/stretchr/testify v1.7.0
 	github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
 	github.com/urfave/cli v1.20.0
-	github.com/valyala/fasthttp v1.34.0
+	github.com/valyala/fasthttp v1.42.0
 	go.uber.org/zap v1.13.0
 	golang.org/x/crypto v0.0.0-20220214200702-86341886e292
-	golang.org/x/net v0.0.0-20220225172249-27dd8689420f
-	golang.org/x/sys v0.0.0-20220227234510-4e6760a101f9
-	golang.org/x/tools v0.1.0
-	google.golang.org/grpc v1.32.0
+	golang.org/x/net v0.5.0
+	golang.org/x/sys v0.4.0
+	golang.org/x/tools v0.5.0
+	google.golang.org/grpc v1.52.0
 	gopkg.in/DataDog/dd-trace-go.v1 v1.40.1
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c
 	gopkg.in/fatih/set.v0 v0.1.0
