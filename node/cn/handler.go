@@ -1040,7 +1040,7 @@ func handleNodeDataRequestMsg(pm *ProtocolManager, p Peer, msg p2p.Msg) error {
 	}
 
 	for _, pCN := range pm.peers.CNPeers() {
-		return pCN.RequestBodies(hashes)
+		return pCN.RequestNodeData(hashes)
 	}
 
 	return nil
@@ -1078,55 +1078,121 @@ func handleNodeDataMsg(pm *ProtocolManager, p Peer, msg p2p.Msg) error {
 	return nil
 }
 
-// handleGetReceiptsMsg handles receipt request message.
+// // handleGetReceiptsMsg handles receipt request message.
+// func handleReceiptsRequestMsg(pm *ProtocolManager, p Peer, msg p2p.Msg) error {
+// 	// Decode the retrieval message
+// 	msgStream := rlp.NewStream(msg.Payload, uint64(msg.Size))
+// 	if _, err := msgStream.List(); err != nil {
+// 		return err
+// 	}
+// 	// Gather state data until the fetch or network limits is reached
+// 	var (
+// 		hash     common.Hash
+// 		bytes    int
+// 		receipts []rlp.RawValue
+// 	)
+// 	for bytes < softResponseLimit && len(receipts) < downloader.MaxReceiptFetch {
+// 		// Retrieve the hash of the next block
+// 		if err := msgStream.Decode(&hash); err == rlp.EOL {
+// 			break
+// 		} else if err != nil {
+// 			return errResp(ErrDecode, "msg %v: %v", msg, err)
+// 		}
+// 		// Retrieve the requested block's receipts, skipping if unknown to us
+// 		results := pm.blockchain.GetReceiptsByBlockHash(hash)
+// 		if results == nil {
+// 			if header := pm.blockchain.GetHeaderByHash(hash); header == nil || !header.EmptyReceipts() {
+// 				continue
+// 			}
+// 		}
+// 		// If known, encode and queue for response packet
+// 		if encoded, err := rlp.EncodeToBytes(results); err != nil {
+// 			logger.Error("Failed to encode receipt", "err", err)
+// 		} else {
+// 			receipts = append(receipts, encoded)
+// 			bytes += len(encoded)
+// 		}
+// 	}
+// 	return p.SendReceiptsRLP(receipts)
+// }
 func handleReceiptsRequestMsg(pm *ProtocolManager, p Peer, msg p2p.Msg) error {
 	// Decode the retrieval message
 	msgStream := rlp.NewStream(msg.Payload, uint64(msg.Size))
 	if _, err := msgStream.List(); err != nil {
 		return err
 	}
-	// Gather state data until the fetch or network limits is reached
+
 	var (
-		hash     common.Hash
-		bytes    int
-		receipts []rlp.RawValue
+		hash   common.Hash
+		hashes []common.Hash
 	)
-	for bytes < softResponseLimit && len(receipts) < downloader.MaxReceiptFetch {
-		// Retrieve the hash of the next block
-		if err := msgStream.Decode(&hash); err == rlp.EOL {
-			break
-		} else if err != nil {
-			return errResp(ErrDecode, "msg %v: %v", msg, err)
-		}
-		// Retrieve the requested block's receipts, skipping if unknown to us
-		results := pm.blockchain.GetReceiptsByBlockHash(hash)
-		if results == nil {
-			if header := pm.blockchain.GetHeaderByHash(hash); header == nil || !header.EmptyReceipts() {
-				continue
-			}
-		}
-		// If known, encode and queue for response packet
-		if encoded, err := rlp.EncodeToBytes(results); err != nil {
-			logger.Error("Failed to encode receipt", "err", err)
-		} else {
-			receipts = append(receipts, encoded)
-			bytes += len(encoded)
-		}
+
+	err := msgStream.Decode(&hash)
+
+	for err != rlp.EOL && err == nil {
+		hashes = append(hashes, hash)
+		err = msgStream.Decode(&hash)
 	}
-	return p.SendReceiptsRLP(receipts)
+
+	if err != rlp.EOL && err != nil {
+		return errResp(ErrDecode, "msg %v: %v", msg, err)
+	}
+
+	for _, pCN := range pm.peers.CNPeers() {
+		return pCN.RequestReceipts(hashes)
+	}
+
+	return nil
 }
 
-// handleReceiptsMsg handles receipt response message.
+// // handleReceiptsMsg handles receipt response message.
+// func handleReceiptsMsg(pm *ProtocolManager, p Peer, msg p2p.Msg) error {
+// 	// A batch of receipts arrived to one of our previous requests
+// 	var receipts [][]*types.Receipt
+// 	if err := msg.Decode(&receipts); err != nil {
+// 		return errResp(ErrDecode, "msg %v: %v", msg, err)
+// 	}
+// 	// Deliver all to the downloader
+// 	if err := pm.downloader.DeliverReceipts(p.GetID(), receipts); err != nil {
+// 		logger.Debug("Failed to deliver receipts", "err", err)
+// 	}
+// 	return nil
+// }
 func handleReceiptsMsg(pm *ProtocolManager, p Peer, msg p2p.Msg) error {
 	// A batch of receipts arrived to one of our previous requests
-	var receipts [][]*types.Receipt
+	var (
+		receipts [][]*types.Receipt
+		bytes    int
+		ret      []rlp.RawValue
+	)
+
 	if err := msg.Decode(&receipts); err != nil {
 		return errResp(ErrDecode, "msg %v: %v", msg, err)
 	}
+
 	// Deliver all to the downloader
 	if err := pm.downloader.DeliverReceipts(p.GetID(), receipts); err != nil {
 		logger.Debug("Failed to deliver receipts", "err", err)
 	}
+
+	for _, r := range receipts {
+		if !(bytes < softResponseLimit && len(ret) < downloader.MaxReceiptFetch) {
+			break
+		}
+
+		// If known, encode and queue for response packet
+		if encoded, err := rlp.EncodeToBytes(r); err != nil {
+			logger.Error("Failed to encode receipt", "err", err)
+		} else {
+			ret = append(ret, encoded)
+			bytes += len(encoded)
+		}
+	}
+
+	for _, pEN := range pm.peers.ENPeers() {
+		return pEN.SendReceiptsRLP(ret)
+	}
+
 	return nil
 }
 
