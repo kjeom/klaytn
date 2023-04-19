@@ -981,42 +981,84 @@ func handleBlockBodiesMsg(pm *ProtocolManager, p Peer, msg p2p.Msg) error {
 	return nil
 }
 
-// handleNodeDataRequestMsg handles node data request message.
+// // handleNodeDataRequestMsg handles node data request message.
+// func handleNodeDataRequestMsg(pm *ProtocolManager, p Peer, msg p2p.Msg) error {
+// 	// Decode the retrieval message
+// 	msgStream := rlp.NewStream(msg.Payload, uint64(msg.Size))
+// 	if _, err := msgStream.List(); err != nil {
+// 		return err
+// 	}
+// 	// Gather state data until the fetch or network limits is reached
+// 	var (
+// 		hash  common.Hash
+// 		bytes int
+// 		data  [][]byte
+// 	)
+// 	for bytes < softResponseLimit && len(data) < downloader.MaxStateFetch {
+// 		// Retrieve the hash of the next state entry
+// 		if err := msgStream.Decode(&hash); err == rlp.EOL {
+// 			break
+// 		} else if err != nil {
+// 			return errResp(ErrDecode, "msg %v: %v", msg, err)
+// 		}
+// 		// Retrieve the requested state entry, stopping if enough was found
+// 		// TODO-Klaytn-Snapsync now the code and trienode is mixed in the protocol level, separate these two types.
+// 		entry, err := pm.blockchain.TrieNode(hash)
+// 		if len(entry) == 0 || err != nil {
+// 			// Read the contract code with prefix only to save unnecessary lookups.
+// 			entry, err = pm.blockchain.ContractCodeWithPrefix(hash)
+// 		}
+// 		if err == nil && len(entry) > 0 {
+// 			data = append(data, entry)
+// 			bytes += len(entry)
+// 		}
+// 	}
+// 	return p.SendNodeData(data)
+// }
 func handleNodeDataRequestMsg(pm *ProtocolManager, p Peer, msg p2p.Msg) error {
 	// Decode the retrieval message
 	msgStream := rlp.NewStream(msg.Payload, uint64(msg.Size))
 	if _, err := msgStream.List(); err != nil {
 		return err
 	}
-	// Gather state data until the fetch or network limits is reached
+
+	// Gather blocks until the fetch or network limits is reached
 	var (
-		hash  common.Hash
-		bytes int
-		data  [][]byte
+		hash   common.Hash
+		hashes []common.Hash
 	)
-	for bytes < softResponseLimit && len(data) < downloader.MaxStateFetch {
-		// Retrieve the hash of the next state entry
-		if err := msgStream.Decode(&hash); err == rlp.EOL {
-			break
-		} else if err != nil {
-			return errResp(ErrDecode, "msg %v: %v", msg, err)
-		}
-		// Retrieve the requested state entry, stopping if enough was found
-		// TODO-Klaytn-Snapsync now the code and trienode is mixed in the protocol level, separate these two types.
-		entry, err := pm.blockchain.TrieNode(hash)
-		if len(entry) == 0 || err != nil {
-			// Read the contract code with prefix only to save unnecessary lookups.
-			entry, err = pm.blockchain.ContractCodeWithPrefix(hash)
-		}
-		if err == nil && len(entry) > 0 {
-			data = append(data, entry)
-			bytes += len(entry)
-		}
+
+	err := msgStream.Decode(&hash)
+
+	for err != rlp.EOL && err == nil {
+		hashes = append(hashes, hash)
+		err = msgStream.Decode(&hash)
 	}
-	return p.SendNodeData(data)
+
+	if err != rlp.EOL && err != nil {
+		return errResp(ErrDecode, "msg %v: %v", msg, err)
+	}
+
+	for _, pCN := range pm.peers.CNPeers() {
+		return pCN.RequestBodies(hashes)
+	}
+
+	return nil
 }
 
-// handleNodeDataMsg handles node data response message.
+// // handleNodeDataMsg handles node data response message.
+// func handleNodeDataMsg(pm *ProtocolManager, p Peer, msg p2p.Msg) error {
+// 	// A batch of node state data arrived to one of our previous requests
+// 	var data [][]byte
+// 	if err := msg.Decode(&data); err != nil {
+// 		return errResp(ErrDecode, "msg %v: %v", msg, err)
+// 	}
+// 	// Deliver all to the downloader
+// 	if err := pm.downloader.DeliverNodeData(p.GetID(), data); err != nil {
+// 		logger.Debug("Failed to deliver node state data", "err", err)
+// 	}
+// 	return nil
+// }
 func handleNodeDataMsg(pm *ProtocolManager, p Peer, msg p2p.Msg) error {
 	// A batch of node state data arrived to one of our previous requests
 	var data [][]byte
@@ -1027,6 +1069,12 @@ func handleNodeDataMsg(pm *ProtocolManager, p Peer, msg p2p.Msg) error {
 	if err := pm.downloader.DeliverNodeData(p.GetID(), data); err != nil {
 		logger.Debug("Failed to deliver node state data", "err", err)
 	}
+
+	// peerID로 basePeer.SendNodeData( data ) 전송
+	for _, pEN := range pm.peers.ENPeers() {
+		return pEN.SendNodeData(data)
+	}
+
 	return nil
 }
 
