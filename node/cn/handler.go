@@ -895,16 +895,66 @@ func handleBlockBodiesRequest(pm *ProtocolManager, p Peer, msg p2p.Msg) ([]rlp.R
 	return bodies, nil
 }
 
-// handleBlockBodiesRequestMsg handles block body request message.
+// // handleBlockBodiesRequestMsg handles block body request message.
+// func handleBlockBodiesRequestMsg(pm *ProtocolManager, p Peer, msg p2p.Msg) error {
+// 	if bodies, err := handleBlockBodiesRequest(pm, p, msg); err != nil {
+// 		return err
+// 	} else {
+// 		return p.SendBlockBodiesRLP(bodies)
+// 	}
+// }
 func handleBlockBodiesRequestMsg(pm *ProtocolManager, p Peer, msg p2p.Msg) error {
-	if bodies, err := handleBlockBodiesRequest(pm, p, msg); err != nil {
+
+	// Decode the retrieval message
+	msgStream := rlp.NewStream(msg.Payload, uint64(msg.Size))
+	if _, err := msgStream.List(); err != nil {
 		return err
-	} else {
-		return p.SendBlockBodiesRLP(bodies)
 	}
+	// Gather blocks until the fetch or network limits is reached
+	var (
+		hash   common.Hash
+		hashes []common.Hash
+	)
+
+	err := msgStream.Decode(&hash)
+
+	for err != rlp.EOL && err == nil {
+		hashes = append(hashes, hash)
+		err = msgStream.Decode(&hash)
+	}
+
+	if err != rlp.EOL && err != nil {
+		return errResp(ErrDecode, "msg %v: %v", msg, err)
+	}
+
+	for _, pCN := range pm.peers.CNPeers() {
+		return pCN.RequestBodies(hashes)
+	}
+
+	return nil
 }
 
-// handleGetBlockBodiesMsg handles block body response message.
+// // handleGetBlockBodiesMsg handles block body response message.
+// func handleBlockBodiesMsg(pm *ProtocolManager, p Peer, msg p2p.Msg) error {
+// 	// A batch of block bodies arrived to one of our previous requests
+// 	var request blockBodiesData
+// 	if err := msg.Decode(&request); err != nil {
+// 		return errResp(ErrDecode, "msg %v: %v", msg, err)
+// 	}
+// 	// Deliver them all to the downloader for queuing
+// 	transactions := make([][]*types.Transaction, len(request))
+
+// 	for i, body := range request {
+// 		transactions[i] = body.Transactions
+// 	}
+
+// 	err := pm.downloader.DeliverBodies(p.GetID(), transactions)
+// 	if err != nil {
+// 		logger.Debug("Failed to deliver bodies", "err", err)
+// 	}
+
+// 	return nil
+// }
 func handleBlockBodiesMsg(pm *ProtocolManager, p Peer, msg p2p.Msg) error {
 	// A batch of block bodies arrived to one of our previous requests
 	var request blockBodiesData
@@ -921,6 +971,11 @@ func handleBlockBodiesMsg(pm *ProtocolManager, p Peer, msg p2p.Msg) error {
 	err := pm.downloader.DeliverBodies(p.GetID(), transactions)
 	if err != nil {
 		logger.Debug("Failed to deliver bodies", "err", err)
+	}
+
+	// peerID로 basePeer.SendBlockHeaders( headers ) 전송
+	for _, pEN := range pm.peers.ENPeers() {
+		return pEN.SendBlockBodies(request)
 	}
 
 	return nil
