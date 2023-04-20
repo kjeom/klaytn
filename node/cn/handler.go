@@ -896,13 +896,14 @@ func handleBlockBodiesRequest(pm *ProtocolManager, p Peer, msg p2p.Msg) ([]rlp.R
 }
 
 // // handleBlockBodiesRequestMsg handles block body request message.
-// func handleBlockBodiesRequestMsg(pm *ProtocolManager, p Peer, msg p2p.Msg) error {
-// 	if bodies, err := handleBlockBodiesRequest(pm, p, msg); err != nil {
-// 		return err
-// 	} else {
-// 		return p.SendBlockBodiesRLP(bodies)
-// 	}
-// }
+//
+//	func handleBlockBodiesRequestMsg(pm *ProtocolManager, p Peer, msg p2p.Msg) error {
+//		if bodies, err := handleBlockBodiesRequest(pm, p, msg); err != nil {
+//			return err
+//		} else {
+//			return p.SendBlockBodiesRLP(bodies)
+//		}
+//	}
 func handleBlockBodiesRequestMsg(pm *ProtocolManager, p Peer, msg p2p.Msg) error {
 
 	// Decode the retrieval message
@@ -953,8 +954,8 @@ func handleBlockBodiesRequestMsg(pm *ProtocolManager, p Peer, msg p2p.Msg) error
 // 		logger.Debug("Failed to deliver bodies", "err", err)
 // 	}
 
-// 	return nil
-// }
+//		return nil
+//	}
 func handleBlockBodiesMsg(pm *ProtocolManager, p Peer, msg p2p.Msg) error {
 	// A batch of block bodies arrived to one of our previous requests
 	var request blockBodiesData
@@ -982,39 +983,40 @@ func handleBlockBodiesMsg(pm *ProtocolManager, p Peer, msg p2p.Msg) error {
 }
 
 // // handleNodeDataRequestMsg handles node data request message.
-// func handleNodeDataRequestMsg(pm *ProtocolManager, p Peer, msg p2p.Msg) error {
-// 	// Decode the retrieval message
-// 	msgStream := rlp.NewStream(msg.Payload, uint64(msg.Size))
-// 	if _, err := msgStream.List(); err != nil {
-// 		return err
-// 	}
-// 	// Gather state data until the fetch or network limits is reached
-// 	var (
-// 		hash  common.Hash
-// 		bytes int
-// 		data  [][]byte
-// 	)
-// 	for bytes < softResponseLimit && len(data) < downloader.MaxStateFetch {
-// 		// Retrieve the hash of the next state entry
-// 		if err := msgStream.Decode(&hash); err == rlp.EOL {
-// 			break
-// 		} else if err != nil {
-// 			return errResp(ErrDecode, "msg %v: %v", msg, err)
-// 		}
-// 		// Retrieve the requested state entry, stopping if enough was found
-// 		// TODO-Klaytn-Snapsync now the code and trienode is mixed in the protocol level, separate these two types.
-// 		entry, err := pm.blockchain.TrieNode(hash)
-// 		if len(entry) == 0 || err != nil {
-// 			// Read the contract code with prefix only to save unnecessary lookups.
-// 			entry, err = pm.blockchain.ContractCodeWithPrefix(hash)
-// 		}
-// 		if err == nil && len(entry) > 0 {
-// 			data = append(data, entry)
-// 			bytes += len(entry)
-// 		}
-// 	}
-// 	return p.SendNodeData(data)
-// }
+//
+//	func handleNodeDataRequestMsg(pm *ProtocolManager, p Peer, msg p2p.Msg) error {
+//		// Decode the retrieval message
+//		msgStream := rlp.NewStream(msg.Payload, uint64(msg.Size))
+//		if _, err := msgStream.List(); err != nil {
+//			return err
+//		}
+//		// Gather state data until the fetch or network limits is reached
+//		var (
+//			hash  common.Hash
+//			bytes int
+//			data  [][]byte
+//		)
+//		for bytes < softResponseLimit && len(data) < downloader.MaxStateFetch {
+//			// Retrieve the hash of the next state entry
+//			if err := msgStream.Decode(&hash); err == rlp.EOL {
+//				break
+//			} else if err != nil {
+//				return errResp(ErrDecode, "msg %v: %v", msg, err)
+//			}
+//			// Retrieve the requested state entry, stopping if enough was found
+//			// TODO-Klaytn-Snapsync now the code and trienode is mixed in the protocol level, separate these two types.
+//			entry, err := pm.blockchain.TrieNode(hash)
+//			if len(entry) == 0 || err != nil {
+//				// Read the contract code with prefix only to save unnecessary lookups.
+//				entry, err = pm.blockchain.ContractCodeWithPrefix(hash)
+//			}
+//			if err == nil && len(entry) > 0 {
+//				data = append(data, entry)
+//				bytes += len(entry)
+//			}
+//		}
+//		return p.SendNodeData(data)
+//	}
 func handleNodeDataRequestMsg(pm *ProtocolManager, p Peer, msg p2p.Msg) error {
 	// Decode the retrieval message
 	msgStream := rlp.NewStream(msg.Payload, uint64(msg.Size))
@@ -1047,18 +1049,19 @@ func handleNodeDataRequestMsg(pm *ProtocolManager, p Peer, msg p2p.Msg) error {
 }
 
 // // handleNodeDataMsg handles node data response message.
-// func handleNodeDataMsg(pm *ProtocolManager, p Peer, msg p2p.Msg) error {
-// 	// A batch of node state data arrived to one of our previous requests
-// 	var data [][]byte
-// 	if err := msg.Decode(&data); err != nil {
-// 		return errResp(ErrDecode, "msg %v: %v", msg, err)
-// 	}
-// 	// Deliver all to the downloader
-// 	if err := pm.downloader.DeliverNodeData(p.GetID(), data); err != nil {
-// 		logger.Debug("Failed to deliver node state data", "err", err)
-// 	}
-// 	return nil
-// }
+//
+//	func handleNodeDataMsg(pm *ProtocolManager, p Peer, msg p2p.Msg) error {
+//		// A batch of node state data arrived to one of our previous requests
+//		var data [][]byte
+//		if err := msg.Decode(&data); err != nil {
+//			return errResp(ErrDecode, "msg %v: %v", msg, err)
+//		}
+//		// Deliver all to the downloader
+//		if err := pm.downloader.DeliverNodeData(p.GetID(), data); err != nil {
+//			logger.Debug("Failed to deliver node state data", "err", err)
+//		}
+//		return nil
+//	}
 func handleNodeDataMsg(pm *ProtocolManager, p Peer, msg p2p.Msg) error {
 	// A batch of node state data arrived to one of our previous requests
 	var data [][]byte
@@ -1079,42 +1082,43 @@ func handleNodeDataMsg(pm *ProtocolManager, p Peer, msg p2p.Msg) error {
 }
 
 // // handleGetReceiptsMsg handles receipt request message.
-// func handleReceiptsRequestMsg(pm *ProtocolManager, p Peer, msg p2p.Msg) error {
-// 	// Decode the retrieval message
-// 	msgStream := rlp.NewStream(msg.Payload, uint64(msg.Size))
-// 	if _, err := msgStream.List(); err != nil {
-// 		return err
-// 	}
-// 	// Gather state data until the fetch or network limits is reached
-// 	var (
-// 		hash     common.Hash
-// 		bytes    int
-// 		receipts []rlp.RawValue
-// 	)
-// 	for bytes < softResponseLimit && len(receipts) < downloader.MaxReceiptFetch {
-// 		// Retrieve the hash of the next block
-// 		if err := msgStream.Decode(&hash); err == rlp.EOL {
-// 			break
-// 		} else if err != nil {
-// 			return errResp(ErrDecode, "msg %v: %v", msg, err)
-// 		}
-// 		// Retrieve the requested block's receipts, skipping if unknown to us
-// 		results := pm.blockchain.GetReceiptsByBlockHash(hash)
-// 		if results == nil {
-// 			if header := pm.blockchain.GetHeaderByHash(hash); header == nil || !header.EmptyReceipts() {
-// 				continue
-// 			}
-// 		}
-// 		// If known, encode and queue for response packet
-// 		if encoded, err := rlp.EncodeToBytes(results); err != nil {
-// 			logger.Error("Failed to encode receipt", "err", err)
-// 		} else {
-// 			receipts = append(receipts, encoded)
-// 			bytes += len(encoded)
-// 		}
-// 	}
-// 	return p.SendReceiptsRLP(receipts)
-// }
+//
+//	func handleReceiptsRequestMsg(pm *ProtocolManager, p Peer, msg p2p.Msg) error {
+//		// Decode the retrieval message
+//		msgStream := rlp.NewStream(msg.Payload, uint64(msg.Size))
+//		if _, err := msgStream.List(); err != nil {
+//			return err
+//		}
+//		// Gather state data until the fetch or network limits is reached
+//		var (
+//			hash     common.Hash
+//			bytes    int
+//			receipts []rlp.RawValue
+//		)
+//		for bytes < softResponseLimit && len(receipts) < downloader.MaxReceiptFetch {
+//			// Retrieve the hash of the next block
+//			if err := msgStream.Decode(&hash); err == rlp.EOL {
+//				break
+//			} else if err != nil {
+//				return errResp(ErrDecode, "msg %v: %v", msg, err)
+//			}
+//			// Retrieve the requested block's receipts, skipping if unknown to us
+//			results := pm.blockchain.GetReceiptsByBlockHash(hash)
+//			if results == nil {
+//				if header := pm.blockchain.GetHeaderByHash(hash); header == nil || !header.EmptyReceipts() {
+//					continue
+//				}
+//			}
+//			// If known, encode and queue for response packet
+//			if encoded, err := rlp.EncodeToBytes(results); err != nil {
+//				logger.Error("Failed to encode receipt", "err", err)
+//			} else {
+//				receipts = append(receipts, encoded)
+//				bytes += len(encoded)
+//			}
+//		}
+//		return p.SendReceiptsRLP(receipts)
+//	}
 func handleReceiptsRequestMsg(pm *ProtocolManager, p Peer, msg p2p.Msg) error {
 	// Decode the retrieval message
 	msgStream := rlp.NewStream(msg.Payload, uint64(msg.Size))
@@ -1146,18 +1150,19 @@ func handleReceiptsRequestMsg(pm *ProtocolManager, p Peer, msg p2p.Msg) error {
 }
 
 // // handleReceiptsMsg handles receipt response message.
-// func handleReceiptsMsg(pm *ProtocolManager, p Peer, msg p2p.Msg) error {
-// 	// A batch of receipts arrived to one of our previous requests
-// 	var receipts [][]*types.Receipt
-// 	if err := msg.Decode(&receipts); err != nil {
-// 		return errResp(ErrDecode, "msg %v: %v", msg, err)
-// 	}
-// 	// Deliver all to the downloader
-// 	if err := pm.downloader.DeliverReceipts(p.GetID(), receipts); err != nil {
-// 		logger.Debug("Failed to deliver receipts", "err", err)
-// 	}
-// 	return nil
-// }
+//
+//	func handleReceiptsMsg(pm *ProtocolManager, p Peer, msg p2p.Msg) error {
+//		// A batch of receipts arrived to one of our previous requests
+//		var receipts [][]*types.Receipt
+//		if err := msg.Decode(&receipts); err != nil {
+//			return errResp(ErrDecode, "msg %v: %v", msg, err)
+//		}
+//		// Deliver all to the downloader
+//		if err := pm.downloader.DeliverReceipts(p.GetID(), receipts); err != nil {
+//			logger.Debug("Failed to deliver receipts", "err", err)
+//		}
+//		return nil
+//	}
 func handleReceiptsMsg(pm *ProtocolManager, p Peer, msg p2p.Msg) error {
 	// A batch of receipts arrived to one of our previous requests
 	var (
@@ -1291,9 +1296,23 @@ func handleNewBlockHashesMsg(pm *ProtocolManager, p Peer, msg p2p.Msg) error {
 	return nil
 }
 
-// handleBlockHeaderFetchRequestMsg handles block header fetch request message.
-// It will send a header that the peer requested.
-// If the peer requests a header which does not exist, error will be returned.
+// // handleBlockHeaderFetchRequestMsg handles block header fetch request message.
+// // It will send a header that the peer requested.
+// // If the peer requests a header which does not exist, error will be returned.
+//
+//	func handleBlockHeaderFetchRequestMsg(pm *ProtocolManager, p Peer, msg p2p.Msg) error {
+//		var hash common.Hash
+//		if err := msg.Decode(&hash); err != nil {
+//			return errResp(ErrDecode, "%v: %v", msg, err)
+//		}
+//
+//		header := pm.blockchain.GetHeaderByHash(hash)
+//		if header == nil {
+//			return fmt.Errorf("peer requested header for non-existing hash. peer: %v, hash: %v", p.GetID(), hash)
+//		}
+//
+//		return p.SendFetchedBlockHeader(header)
+//	}
 func handleBlockHeaderFetchRequestMsg(pm *ProtocolManager, p Peer, msg p2p.Msg) error {
 	var hash common.Hash
 	if err := msg.Decode(&hash); err != nil {
@@ -1305,11 +1324,30 @@ func handleBlockHeaderFetchRequestMsg(pm *ProtocolManager, p Peer, msg p2p.Msg) 
 		return fmt.Errorf("peer requested header for non-existing hash. peer: %v, hash: %v", p.GetID(), hash)
 	}
 
-	return p.SendFetchedBlockHeader(header)
+	for _, pCN := range pm.peers.CNPeers() {
+		return pCN.FetchBlockHeader(hash)
+	}
+
+	return nil
 }
 
-// handleBlockHeaderFetchResponseMsg handles new block header response message.
-// This message should contain only one header.
+// // handleBlockHeaderFetchResponseMsg handles new block header response message.
+// // This message should contain only one header.
+//
+//	func handleBlockHeaderFetchResponseMsg(pm *ProtocolManager, p Peer, msg p2p.Msg) error {
+//		var header *types.Header
+//		if err := msg.Decode(&header); err != nil {
+//			return errResp(ErrDecode, "msg %v: %v", msg, err)
+//		}
+//
+//		headers := pm.fetcher.FilterHeaders(p.GetID(), []*types.Header{header}, time.Now())
+//		if len(headers) != 0 {
+//			logger.Debug("Failed to filter header", "peer", p.GetID(),
+//				"num", header.Number.Uint64(), "hash", header.Hash(), "len(headers)", len(headers))
+//		}
+//
+//		return nil
+//	}
 func handleBlockHeaderFetchResponseMsg(pm *ProtocolManager, p Peer, msg p2p.Msg) error {
 	var header *types.Header
 	if err := msg.Decode(&header); err != nil {
@@ -1320,6 +1358,10 @@ func handleBlockHeaderFetchResponseMsg(pm *ProtocolManager, p Peer, msg p2p.Msg)
 	if len(headers) != 0 {
 		logger.Debug("Failed to filter header", "peer", p.GetID(),
 			"num", header.Number.Uint64(), "hash", header.Hash(), "len(headers)", len(headers))
+	}
+
+	for _, pEN := range pm.peers.ENPeers() {
+		return pEN.SendFetchedBlockHeader(header)
 	}
 
 	return nil
