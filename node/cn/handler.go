@@ -1319,11 +1319,6 @@ func handleBlockHeaderFetchRequestMsg(pm *ProtocolManager, p Peer, msg p2p.Msg) 
 		return errResp(ErrDecode, "%v: %v", msg, err)
 	}
 
-	header := pm.blockchain.GetHeaderByHash(hash)
-	if header == nil {
-		return fmt.Errorf("peer requested header for non-existing hash. peer: %v, hash: %v", p.GetID(), hash)
-	}
-
 	for _, pCN := range pm.peers.CNPeers() {
 		return pCN.FetchBlockHeader(hash)
 	}
@@ -1375,6 +1370,7 @@ func handleBlockBodiesFetchRequestMsg(pm *ProtocolManager, p Peer, msg p2p.Msg) 
 	} else {
 		return p.SendFetchedBlockBodiesRLP(bodies)
 	}
+
 }
 
 // handleBlockBodiesFetchResponseMsg handles block bodies fetch response message.
