@@ -1362,21 +1362,76 @@ func handleBlockHeaderFetchResponseMsg(pm *ProtocolManager, p Peer, msg p2p.Msg)
 	return nil
 }
 
-// handleBlockBodiesFetchRequestMsg handles block bodies fetch request message.
-// If the peer requests bodies which do not exist, error will be returned.
+// // handleBlockBodiesFetchRequestMsg handles block bodies fetch request message.
+// // If the peer requests bodies which do not exist, error will be returned.
+//
+//	func handleBlockBodiesFetchRequestMsg(pm *ProtocolManager, p Peer, msg p2p.Msg) error {
+//		if bodies, err := handleBlockBodiesRequest(pm, p, msg); err != nil {
+//			return err
+//		} else {
+//			return p.SendFetchedBlockBodiesRLP(bodies)
+//		}
+//	}
 func handleBlockBodiesFetchRequestMsg(pm *ProtocolManager, p Peer, msg p2p.Msg) error {
-	if bodies, err := handleBlockBodiesRequest(pm, p, msg); err != nil {
+
+	// Decode the retrieval message
+	msgStream := rlp.NewStream(msg.Payload, uint64(msg.Size))
+	if _, err := msgStream.List(); err != nil {
 		return err
-	} else {
-		return p.SendFetchedBlockBodiesRLP(bodies)
+	}
+	// Gather blocks until the fetch or network limits is reached
+	var (
+		hash   common.Hash
+		hashes []common.Hash
+	)
+
+	err := msgStream.Decode(&hash)
+
+	for err != rlp.EOL && err == nil {
+		hashes = append(hashes, hash)
+		err = msgStream.Decode(&hash)
 	}
 
+	if err != rlp.EOL && err != nil {
+		return errResp(ErrDecode, "msg %v: %v", msg, err)
+	}
+
+	for _, pCN := range pm.peers.CNPeers() {
+		return pCN.RequestBodies(hashes)
+	}
+
+	return nil
 }
 
-// handleBlockBodiesFetchResponseMsg handles block bodies fetch response message.
+// // handleBlockBodiesFetchResponseMsg handles block bodies fetch response message.
+//
+//	func handleBlockBodiesFetchResponseMsg(pm *ProtocolManager, p Peer, msg p2p.Msg) error {
+//		// A batch of block bodies arrived to one of our previous requests
+//		var request blockBodiesData
+//		if err := msg.Decode(&request); err != nil {
+//			return errResp(ErrDecode, "msg %v: %v", msg, err)
+//		}
+//		// Deliver them all to the downloader for queuing
+//		transactions := make([][]*types.Transaction, len(request))
+//
+//		for i, body := range request {
+//			transactions[i] = body.Transactions
+//		}
+//
+//		transactions = pm.fetcher.FilterBodies(p.GetID(), transactions, time.Now())
+//
+//		if len(transactions) > 0 {
+//			logger.Warn("Failed to filter bodies", "peer", p.GetID(), "lenTxs", len(transactions))
+//		}
+//		return nil
+//	}
 func handleBlockBodiesFetchResponseMsg(pm *ProtocolManager, p Peer, msg p2p.Msg) error {
 	// A batch of block bodies arrived to one of our previous requests
-	var request blockBodiesData
+	var (
+		request blockBodiesData
+		bytes   int
+		bodies  []rlp.RawValue
+	)
 	if err := msg.Decode(&request); err != nil {
 		return errResp(ErrDecode, "msg %v: %v", msg, err)
 	}
@@ -1392,6 +1447,25 @@ func handleBlockBodiesFetchResponseMsg(pm *ProtocolManager, p Peer, msg p2p.Msg)
 	if len(transactions) > 0 {
 		logger.Warn("Failed to filter bodies", "peer", p.GetID(), "lenTxs", len(transactions))
 	}
+
+	for _, body := range request {
+		if !(bytes < softResponseLimit && len(bodies) < downloader.MaxReceiptFetch) {
+			break
+		}
+
+		// If known, encode and queue for response packet
+		if encoded, err := rlp.EncodeToBytes(body); err != nil {
+			logger.Error("Failed to encode body", "err", err)
+		} else {
+			bodies = append(bodies, encoded)
+			bytes += len(encoded)
+		}
+	}
+
+	for _, pEN := range pm.peers.ENPeers() {
+		return pEN.SendFetchedBlockBodiesRLP(bodies)
+	}
+
 	return nil
 }
 
