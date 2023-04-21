@@ -1201,7 +1201,53 @@ func handleReceiptsMsg(pm *ProtocolManager, p Peer, msg p2p.Msg) error {
 	return nil
 }
 
-// handleStakingInfoRequestMsg handles staking information request message.
+// // handleStakingInfoRequestMsg handles staking information request message.
+//
+//	func handleStakingInfoRequestMsg(pm *ProtocolManager, p Peer, msg p2p.Msg) error {
+//		if pm.chainconfig.Istanbul == nil || pm.chainconfig.Istanbul.ProposerPolicy != uint64(istanbul.WeightedRandom) {
+//			return errResp(ErrUnsupportedEnginePolicy, "the engine is not istanbul or the policy is not weighted random")
+//		}
+//
+//		// Decode the retrieval message
+//		msgStream := rlp.NewStream(msg.Payload, uint64(msg.Size))
+//		if _, err := msgStream.List(); err != nil {
+//			return err
+//		}
+//		// Gather state data until the fetch or network limits is reached
+//		var (
+//			hash         common.Hash
+//			bytes        int
+//			stakingInfos []rlp.RawValue
+//		)
+//		for bytes < softResponseLimit && len(stakingInfos) < downloader.MaxStakingInfoFetch {
+//			// Retrieve the hash of the next block
+//			if err := msgStream.Decode(&hash); err == rlp.EOL {
+//				break
+//			} else if err != nil {
+//				return errResp(ErrDecode, "msg %v: %v", msg, err)
+//			}
+//
+//			// Retrieve the requested block's staking information, skipping if unknown to us
+//			header := pm.blockchain.GetHeaderByHash(hash)
+//			if header == nil {
+//				logger.Error("Failed to get header", "hash", hash)
+//				continue
+//			}
+//			result := reward.GetStakingInfoOnStakingBlock(header.Number.Uint64())
+//			if result == nil {
+//				logger.Error("Failed to get staking information on a specific block", "number", header.Number.Uint64(), "hash", hash)
+//				continue
+//			}
+//			// If known, encode and queue for response packet
+//			if encoded, err := rlp.EncodeToBytes(result); err != nil {
+//				logger.Error("Failed to encode staking info", "err", err)
+//			} else {
+//				stakingInfos = append(stakingInfos, encoded)
+//				bytes += len(encoded)
+//			}
+//		}
+//		return p.SendStakingInfoRLP(stakingInfos)
+//	}
 func handleStakingInfoRequestMsg(pm *ProtocolManager, p Peer, msg p2p.Msg) error {
 	if pm.chainconfig.Istanbul == nil || pm.chainconfig.Istanbul.ProposerPolicy != uint64(istanbul.WeightedRandom) {
 		return errResp(ErrUnsupportedEnginePolicy, "the engine is not istanbul or the policy is not weighted random")
@@ -1214,41 +1260,46 @@ func handleStakingInfoRequestMsg(pm *ProtocolManager, p Peer, msg p2p.Msg) error
 	}
 	// Gather state data until the fetch or network limits is reached
 	var (
-		hash         common.Hash
-		bytes        int
-		stakingInfos []rlp.RawValue
+		hash   common.Hash
+		hashes []common.Hash
 	)
-	for bytes < softResponseLimit && len(stakingInfos) < downloader.MaxStakingInfoFetch {
-		// Retrieve the hash of the next block
-		if err := msgStream.Decode(&hash); err == rlp.EOL {
-			break
-		} else if err != nil {
-			return errResp(ErrDecode, "msg %v: %v", msg, err)
-		}
 
-		// Retrieve the requested block's staking information, skipping if unknown to us
-		header := pm.blockchain.GetHeaderByHash(hash)
-		if header == nil {
-			logger.Error("Failed to get header", "hash", hash)
-			continue
-		}
-		result := reward.GetStakingInfoOnStakingBlock(header.Number.Uint64())
-		if result == nil {
-			logger.Error("Failed to get staking information on a specific block", "number", header.Number.Uint64(), "hash", hash)
-			continue
-		}
-		// If known, encode and queue for response packet
-		if encoded, err := rlp.EncodeToBytes(result); err != nil {
-			logger.Error("Failed to encode staking info", "err", err)
-		} else {
-			stakingInfos = append(stakingInfos, encoded)
-			bytes += len(encoded)
-		}
+	err := msgStream.Decode(&hash)
+
+	for err != rlp.EOL && err == nil {
+		hashes = append(hashes, hash)
+		err = msgStream.Decode(&hash)
 	}
-	return p.SendStakingInfoRLP(stakingInfos)
+
+	if err != rlp.EOL && err != nil {
+		return errResp(ErrDecode, "msg %v: %v", msg, err)
+	}
+
+	for _, pCN := range pm.peers.CNPeers() {
+		return pCN.RequestStakingInfo(hashes)
+	}
+
+	return nil
 }
 
-// handleStakingInfoMsg handles staking information response message.
+// // handleStakingInfoMsg handles staking information response message.
+//
+//	func handleStakingInfoMsg(pm *ProtocolManager, p Peer, msg p2p.Msg) error {
+//		if pm.chainconfig.Istanbul == nil || pm.chainconfig.Istanbul.ProposerPolicy != uint64(istanbul.WeightedRandom) {
+//			return errResp(ErrUnsupportedEnginePolicy, "the engine is not istanbul or the policy is not weighted random")
+//		}
+//
+//		// A batch of stakingInfos arrived to one of our previous requests
+//		var stakingInfos []*reward.StakingInfo
+//		if err := msg.Decode(&stakingInfos); err != nil {
+//			return errResp(ErrDecode, "msg %v: %v", msg, err)
+//		}
+//		// Deliver all to the downloader
+//		if err := pm.downloader.DeliverStakingInfos(p.GetID(), stakingInfos); err != nil {
+//			logger.Debug("Failed to deliver staking information", "err", err)
+//		}
+//		return nil
+//	}
 func handleStakingInfoMsg(pm *ProtocolManager, p Peer, msg p2p.Msg) error {
 	if pm.chainconfig.Istanbul == nil || pm.chainconfig.Istanbul.ProposerPolicy != uint64(istanbul.WeightedRandom) {
 		return errResp(ErrUnsupportedEnginePolicy, "the engine is not istanbul or the policy is not weighted random")
@@ -1263,6 +1314,31 @@ func handleStakingInfoMsg(pm *ProtocolManager, p Peer, msg p2p.Msg) error {
 	if err := pm.downloader.DeliverStakingInfos(p.GetID(), stakingInfos); err != nil {
 		logger.Debug("Failed to deliver staking information", "err", err)
 	}
+
+	// Gather state data until the fetch or network limits is reached
+	var (
+		bytes int
+		ret   []rlp.RawValue
+	)
+
+	for _, s := range stakingInfos {
+		if !(bytes < softResponseLimit && len(ret) < downloader.MaxReceiptFetch) {
+			break
+		}
+
+		// If known, encode and queue for response packet
+		if encoded, err := rlp.EncodeToBytes(s); err != nil {
+			logger.Error("Failed to encode stakingInfo", "err", err)
+		} else {
+			ret = append(ret, encoded)
+			bytes += len(encoded)
+		}
+	}
+
+	for _, pEN := range pm.peers.ENPeers() {
+		return pEN.SendStakingInfoRLP(ret)
+	}
+
 	return nil
 }
 
