@@ -253,6 +253,8 @@ var KPNFlags = []cli.Flag{
 	altsrc.NewBoolFlag(utils.CypressFlag),
 	altsrc.NewBoolFlag(utils.BaobabFlag),
 	altsrc.NewBoolFlag(utils.TxPoolSpamThrottlerDisableFlag),
+	// for litePN test
+	altsrc.NewBoolFlag(utils.KESNodeTypeServiceFlag),
 }
 
 var KENFlags = []cli.Flag{
