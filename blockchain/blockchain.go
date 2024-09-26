@@ -1843,6 +1843,9 @@ func (bc *BlockChain) insertChain(chain types.Blocks) (int, []interface{}, []*ty
 	// Start a parallel signature recovery (signer will fluke on fork transition, minimal perf loss)
 	senderCacher.recoverFromBlocks(types.MakeSigner(bc.chainConfig, chain[0].Number()), chain)
 
+	for i, block := range chain {
+		logger.Info("Insertchain checkpoint chain range", "index", i, "block", block.Number(), "chain length", len(chain))
+	}
 	// Iterate over the blocks and insert when the verifier permits
 	for i, block := range chain {
 		// If the chain is terminating, stop processing blocks
@@ -1921,6 +1924,8 @@ func (bc *BlockChain) insertChain(chain types.Blocks) (int, []interface{}, []*ty
 		if err == nil {
 			err = bc.validator.ValidateBody(block)
 		}
+		logger.Info("consensus result check", "result", err)
+		defer logger.Info("insertchain returned")
 
 		switch {
 		case err == ErrKnownBlock:
@@ -1955,6 +1960,7 @@ func (bc *BlockChain) insertChain(chain types.Blocks) (int, []interface{}, []*ty
 			externTd := new(big.Int).Add(bc.GetTd(block.ParentHash(), block.NumberU64()-1), block.BlockScore())
 			if localTd.Cmp(externTd) > 0 {
 				bc.WriteBlockWithoutState(block, externTd)
+				logger.Info("error pruned ancestor occured")
 				continue
 			}
 			// Competitor chain beat canonical, gather all blocks from the common ancestor
@@ -2008,6 +2014,7 @@ func (bc *BlockChain) insertChain(chain types.Blocks) (int, []interface{}, []*ty
 
 		// Write the block to the chain and get the writeResult.
 		writeResult, err := bc.writeBlockWithState(block, receipts, stateDB)
+		logger.Info("Insertchain checkpoint after writeBlockWithState")
 		if err != nil {
 			atomic.StoreUint32(&followupInterrupt, 1)
 			if err == ErrKnownBlock {
@@ -2044,6 +2051,7 @@ func (bc *BlockChain) insertChain(chain types.Blocks) (int, []interface{}, []*ty
 
 		blockAgeTimer.Update(time.Since(time.Unix(int64(block.Time().Uint64()), 0)))
 
+		logger.Info("InsertChain checkpoint", "writeResult status", writeResult.Status, "block number", block.Number())
 		switch writeResult.Status {
 		case CanonStatTy:
 			processTxsTime := common.PrettyDuration(procStats.AfterApplyTxs.Sub(procStats.BeforeApplyTxs))
